@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">DeliveryApp</string>
+
+    <!-- bottom navigation -->
+    <string name="main_bottom_navigation_user">Обо мне</string>
+    <string name="main_bottom_navigation_trajectories">Маршруты</string>
+    <string name="main_bottom_navigation_expeditions">Отправления</string>
+
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
