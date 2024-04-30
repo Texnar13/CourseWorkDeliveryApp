@@ -12,4 +12,10 @@ public interface MainActivityInterface {
 
     void registerUser(String email, String name, String password);
 
+// --------------------------------------- User fragment ---------------------------------------
+
+    void logout();
+
+    //
+
 }

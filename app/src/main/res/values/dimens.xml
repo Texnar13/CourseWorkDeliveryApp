@@ -9,6 +9,10 @@
     <dimen name="containers_radius_rounding">16dp</dimen>
 
     <dimen name="button_height">62dp</dimen>
+    <dimen name="icons_height">32dp</dimen>
+
+
+    <dimen name="user_fragment_photo_height">192dp</dimen>
 
 
 </resources>

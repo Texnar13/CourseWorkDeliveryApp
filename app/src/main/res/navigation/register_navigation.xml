@@ -5,48 +5,65 @@
     android:id="@+id/register_navigation"
     app:startDestination="@id/loginFragment">
 
+    <!-- Регистрация -->
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.texnar13.deliveryapp.ui.LoginFragment"
         android:label="fragment_login"
-        tools:layout="@layout/fragment_login" >
+        tools:layout="@layout/fragment_login">
         <action
             android:id="@+id/action_loginFragment_to_mainFragment"
-            app:destination="@id/mainFragment"
+            app:destination="@id/fragment_user"
             app:enterAnim="@anim/nav_default_enter_anim"
             app:exitAnim="@anim/nav_default_exit_anim"
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
-            app:destination="@id/registerFragment"  />
+            app:destination="@id/registerFragment" />
     </fragment>
-    <fragment
-        android:id="@+id/mainFragment"
-        android:name="com.texnar13.deliveryapp.ui.MainFragment"
-        android:label="fragment_main"
-        tools:layout="@layout/fragment_main"
-        />
     <fragment
         android:id="@+id/registerFragment"
         android:name="com.texnar13.deliveryapp.ui.RegisterFragment"
         android:label="fragment_register"
-        tools:layout="@layout/fragment_register" >
+        tools:layout="@layout/fragment_register">
+
         <action
             android:id="@+id/action_registerFragment_to_mainFragment"
-            app:destination="@id/mainFragment"
+            app:destination="@id/fragment_user"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToSaveState="true"
+            app:restoreState="true"
+
             app:enterAnim="@anim/nav_default_enter_anim"
             app:exitAnim="@anim/nav_default_exit_anim"
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
+
+    <!-- Главное меню -->
     <fragment
-        android:id="@+id/trajectoriesFragment"
+        android:id="@+id/fragment_user"
+        android:name="com.texnar13.deliveryapp.ui.UserFragment"
+        android:label="fragment_main"
+        tools:layout="@layout/fragment_user">
+        <!--action
+            android:id="@+id/swap_stack"
+            app:destination="@id/second_stack"
+            app:popUpTo="@id/first_stack_start_destination"
+            app:popUpToSaveState="true"
+            app:restoreState="true" /-->
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_trajectories"
         android:name="com.texnar13.deliveryapp.ui.TrajectoriesFragment"
         android:label="fragment_trajectories"
         tools:layout="@layout/fragment_trajectories" />
+
     <fragment
-        android:id="@+id/expeditionsFragment"
+        android:id="@+id/fragment_expeditions"
         android:name="com.texnar13.deliveryapp.ui.ExpeditionsFragment"
         android:label="fragment_expeditions"
         tools:layout="@layout/fragment_expeditions" />
