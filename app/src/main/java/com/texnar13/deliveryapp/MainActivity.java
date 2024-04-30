@@ -1,5 +1,6 @@
 package com.texnar13.deliveryapp;
 
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
@@ -50,13 +52,21 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     BottomNavigationView bottomNavigationView;
 
 
+    // viewModel в которой содержится вся бизнеслогика
+    MainViewModel viewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // мне лень ваять интерфейс :)
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        viewModel = (new ViewModelProvider(this)).get(MainViewModel.class);
+        //getDefaultViewModelProviderFactory().create(MainViewModel.class);
 
         // ------------------------ Фрагменты и View --------------------------------
+
 
         // контроллер в котором пропсана навигация между фрагментами
         navController = Navigation.findNavController(this, R.id.activity_main_nav_host_fragment);
@@ -85,18 +95,15 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         // связываем меню навигации и контроллер (он будет работать по id пунктов меню)
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
-
         // Менеджер фрагментов, нужен для получения ссылки на текщий фрагмент (чтобы отправлять ему данные)
         navFragmentManager = Objects.requireNonNull(getSupportFragmentManager()
                         .findFragmentById(R.id.activity_main_nav_host_fragment))
                 .getChildFragmentManager();
 
-
         // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
         loadScreenBlocking = findViewById(R.id.activity_main_load_block);
         loadScreenBlocking.setOnTouchListener((view, motionEvent) -> true);
-        loadScreenBlocking.setVisibility((isNowOutedLoadScreen)?(View.VISIBLE):(View.INVISIBLE));
-
+        loadScreenBlocking.setVisibility((isNowOutedLoadScreen) ? (View.VISIBLE) : (View.INVISIBLE));
 
         // добавление слушателя кнопке назад (В качестве владельца слушателя текущая активити)
         getOnBackPressedDispatcher().addCallback(this, myBackCallback);
@@ -105,8 +112,20 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         // ------------------------ Бизнес-логика --------------------------------
         // открытие активности а не перерисовка
         if (savedInstanceState == null) {
+
+            // todo это соответственно переносится во ViewModel,
+            //   а enableLoadBar() работает через подписку на ViewModel
+            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
+            //   LiveData и MutableLiveData :)
+            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
+            //   контекст view model не хранит, но он передаётся в методах
+
+            // todo Но это все скорее всего надо будет делать, когда начну работать с Mongodb
+            //
+
+
+
             // просто отложенный вызов
-            Log.e("Hello", "start loading enableLoadBar()");
             enableLoadBar();
             (new Handler(Looper.getMainLooper())).postDelayed(() -> {
                         if (currentState == FState.LOGIN_FRAGMENT) {
@@ -255,9 +274,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     public void logout() {
 
         // вызов выхода из активности с экраном загрузки
-        Log.e("Hello", "logout enableLoadBar()");
         enableLoadBar();
-        (new Handler(Looper.getMainLooper())).postDelayed((Runnable) () -> {
+        (new Handler(Looper.getMainLooper())).postDelayed(() -> {
 
             // выключение экрана загрузки
             disableLoadBar();
