@@ -14,5 +14,7 @@
 
     <dimen name="user_fragment_photo_height">192dp</dimen>
 
+    <dimen name="expeditions_fragment_box_photo_width">100dp</dimen>
+
 
 </resources>

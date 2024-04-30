@@ -9,8 +9,17 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- -->
+    <color name="colorOnSecondary">#FF000000</color>
 
     <color name="containers_color">#B0D9D9D9</color>
+    <color name="container_line_color">#F8F8F8</color>
+    <color name="container_line_color2">#3D5D5D</color>
+
     <color name="untouchable_interface_color">#60D9D9D0</color>
+
+    <color name="button_text_color">#0085FF</color>
+
+    <color name="sended_mail_text_color">#00A32E</color>
+
 
 </resources>

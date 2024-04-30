@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
     // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
     View loadScreenBlocking;
+    boolean isNowOutedLoadScreen;
 
     // нижнее меню навигации
     BottomNavigationView bottomNavigationView;
@@ -93,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
         loadScreenBlocking = findViewById(R.id.activity_main_load_block);
         loadScreenBlocking.setOnTouchListener((view, motionEvent) -> true);
+        loadScreenBlocking.setVisibility((isNowOutedLoadScreen)?(View.VISIBLE):(View.INVISIBLE));
 
 
         // добавление слушателя кнопке назад (В качестве владельца слушателя текущая активити)
@@ -100,23 +103,25 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
 
         // ------------------------ Бизнес-логика --------------------------------
+        // открытие активности а не перерисовка
+        if (savedInstanceState == null) {
+            // просто отложенный вызов
+            Log.e("Hello", "start loading enableLoadBar()");
+            enableLoadBar();
+            (new Handler(Looper.getMainLooper())).postDelayed(() -> {
+                        if (currentState == FState.LOGIN_FRAGMENT) {
 
-        // просто отложенный вызов
-        enableLoadBar();
-        (new Handler(Looper.getMainLooper())).postDelayed(() -> {
-                    if (currentState == FState.LOGIN_FRAGMENT) {
+                            // текущий фрагмент (всегда первый в списке)
+                            LoginFragmentInterface loginFragmentInterface =
+                                    (LoginFragmentInterface) navFragmentManager.getFragments().get(0);
+                            //.findFragmentById(R.id.fragment_main);
+                            loginFragmentInterface.loadOver();
 
-                        // текущий фрагмент (всегда первый в списке)
-                        LoginFragmentInterface loginFragmentInterface =
-                                (LoginFragmentInterface) navFragmentManager.getFragments().get(0);
-                        //.findFragmentById(R.id.fragment_main);
-                        loginFragmentInterface.loadOver();
-
+                        }
                         disableLoadBar();
-                    }
-                },
-                1500);
-
+                    },
+                    1500);
+        }
 
         //BottomNavigationView navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -143,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
                     getOnBackPressedDispatcher().onBackPressed();
                     setEnabled(true);
                     break;
-                    
+
                 case USER_FRAGMENT:
                 case TRAJECTORIES_FRAGMENT:
                 case EXPEDITIONS_FRAGMENT:
@@ -159,6 +164,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
 
     void enableLoadBar() {
+        isNowOutedLoadScreen = true;
+
         // отключение элементов интерфейса и включение progress bar загрузки
         if (loadScreenBlocking != null) {
             loadScreenBlocking.setVisibility(View.VISIBLE);
@@ -170,6 +177,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     }
 
     void disableLoadBar() {
+        isNowOutedLoadScreen = false;
+
         // включение элементов интерфейса и скрытие progress bar загрузки
         if (loadScreenBlocking != null) {
             loadScreenBlocking.setVisibility(View.INVISIBLE);
@@ -246,6 +255,7 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     public void logout() {
 
         // вызов выхода из активности с экраном загрузки
+        Log.e("Hello", "logout enableLoadBar()");
         enableLoadBar();
         (new Handler(Looper.getMainLooper())).postDelayed((Runnable) () -> {
 
@@ -261,5 +271,15 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         }, 1000);
 
     }
+
+
+    @Override
+    public void goToEditUser() {
+
+        // todo вызов диалога
+        Toast.makeText(this, "диалог редактирования", Toast.LENGTH_SHORT).show();
+
+    }
+
 }
 

@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.texnar13.deliveryapp.R;
@@ -58,11 +59,15 @@ public class UserFragment extends Fragment {
 
         // кнопка редактирования информации о пользователе
         rootView.findViewById(R.id.fragment_user_edit_user_button).setOnClickListener(view -> {
-
+            // вызов метода в Activity
+            ((MainActivityInterface) Objects.requireNonNull(getActivity())).goToEditUser();
         });
 
         //rootView.findViewById(R.id.fragment_user_user_img);
+
         TextView userDescription = rootView.findViewById(R.id.fragment_user_user_description);
+
+        LinearLayout userNotificationsContainer = rootView.findViewById(R.id.fragment_user_notifications_container);
 
 
 

@@ -23,9 +23,8 @@ import io.realm.mongodb.User;
 import io.realm.mongodb.mongo.MongoClient;
 import io.realm.mongodb.mongo.MongoCollection;
 import io.realm.mongodb.mongo.MongoDatabase;
-import io.realm.mongodb.sync.SyncConfiguration;
 
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterActivityDeleteMe extends AppCompatActivity {
 
     Realm uiThreadRealm;
     App app;

@@ -16,6 +16,6 @@ public interface MainActivityInterface {
 
     void logout();
 
-    //
+    void goToEditUser();
 
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorOnSecondary">#FFFFFFFF</color>
+
+    <color name="containers_color">#B02D2D2D</color>
+    <color name="container_line_color">#5D5D5D</color>
+    <color name="container_line_color2">#3D5D5D</color>
+
+    <color name="untouchable_interface_color">#60D9D9D0</color>
+
+    <color name="button_text_color">#0085FF</color>
+
+</resources>

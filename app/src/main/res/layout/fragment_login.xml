@@ -31,23 +31,20 @@
             android:layout_height="@dimen/button_height"
             android:gravity="center"
             android:text="Войти в аккаунт"
-            android:textColor="#000000"
             android:textSize="20sp" />
 
         <EditText
             android:id="@+id/fragment_login_login_edit_email"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
-            android:hint="Эл.Почта"
-            android:textColor="#000000" />
+            android:hint="Эл.Почта" />
 
         <EditText
             android:id="@+id/fragment_login_login_edit_password"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
             android:hint="Пароль"
-            android:inputType="textPassword"
-            android:textColor="#000000" />
+            android:inputType="textPassword" />
 
         <TextView
             android:id="@+id/fragment_login_login_button"
@@ -55,7 +52,7 @@
             android:layout_height="@dimen/button_height"
             android:gravity="center"
             android:text="Войти"
-            android:textColor="#0085FF"
+            android:textColor="@color/button_text_color"
             android:textSize="15sp" />
 
     </LinearLayout>
@@ -79,7 +76,7 @@
             android:gravity="center"
             android:padding="@dimen/containers_margin"
             android:text="Регистрация"
-            android:textColor="#0085FF" />
+            android:textColor="@color/button_text_color" />
     </LinearLayout>
 
 

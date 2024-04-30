@@ -5,10 +5,145 @@
     android:layout_height="match_parent"
     tools:context=".ui.ExpeditionsFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/main_bottom_navigation_expeditions" />
+        android:layout_height="wrap_content">
 
+        <LinearLayout
+            android:id="@+id/fragment_expeditions_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/containers_margin"
+            android:layout_marginEnd="@dimen/containers_margin"
+            android:layout_marginBottom="@dimen/button_height"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:background="@drawable/container_round"
+                android:padding="@dimen/containers_margin">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/fragment_expeditions_box_image_container"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/fragment_expeditions_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Посылка Открытка"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:id="@+id/fragment_expeditions_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Категория письмо\nиз Moscow, Russia -> в Kursk, Russia\nВес 0.1кг\nГабариты 1x10x20cm"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/fragment_expeditions_box_image_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:gravity="end"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:id="@+id/fragment_expeditions_box_image"
+                        android:layout_width="@dimen/expeditions_fragment_box_photo_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/containers_margin"
+                        android:layout_marginBottom="@dimen/containers_margin"
+                        android:adjustViewBounds="true"
+                        android:src="@drawable/box_img_example" />
+
+                    <TextView
+                        android:id="@+id/fragment_expeditions_button_edit"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Редактировать"
+                        android:textColor="@color/button_text_color"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/fragment_expeditions_find_somebody"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Найти курьера"
+                        android:textColor="@color/button_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:background="@drawable/container_round"
+                android:padding="@dimen/containers_margin">
+
+                <LinearLayout
+                    android:id="@+id/fragment_expeditions_box_description_container2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/fragment_expeditions_box_image_container2"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Посылка Открытка"
+                        android:textSize="20sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Категория письмо\nиз Moscow, Russia -> в Kursk, Russia\nВес 0.1кг\nГабариты 1x10x20cm\nАдрес отправителя: Москва, ул. Волшебная 2, кв 35\nАдрес получателя: Курск, ул. Строителей 2, кв 35"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ОТПРАВЛЕНА"
+                        android:textColor="@color/sended_mail_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/fragment_expeditions_box_image_container2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignTop="@+id/fragment_expeditions_box_description_container2"
+                    android:layout_alignBottom="@+id/fragment_expeditions_box_description_container2"
+                    android:gravity="end"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="@dimen/expeditions_fragment_box_photo_width"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/containers_margin"
+                        android:layout_marginBottom="@dimen/containers_margin"
+                        android:adjustViewBounds="true"
+                        android:src="@drawable/box_img_example" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="bottom"
+                        android:text="Написать"
+                        android:textColor="@color/button_text_color"
+                        android:textSize="15sp" />
+                </LinearLayout>
+            </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
 </FrameLayout>
