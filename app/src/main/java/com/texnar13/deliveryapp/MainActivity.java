@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -13,16 +14,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.texnar13.deliveryapp.model.DBUser;
 import com.texnar13.deliveryapp.ui.LoginFragmentInterface;
 import com.texnar13.deliveryapp.ui.MainActivityInterface;
 
 import java.util.Objects;
+
+import io.realm.Realm;
 
 
 public class MainActivity extends AppCompatActivity implements MainActivityInterface {
@@ -62,11 +67,74 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         // мне лень ваять интерфейс :)
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        viewModel = (new ViewModelProvider(this)).get(MainViewModel.class);
+
+        // ------------------------ Подписка на ViewModel --------------------------------
+
+
+        viewModel = (new ViewModelProvider(this,
+                new MainViewModelFactory(this))).get(MainViewModel.class);
         //getDefaultViewModelProviderFactory().create(MainViewModel.class);
 
-        // ------------------------ Фрагменты и View --------------------------------
 
+        // отслеживаем состояние подключения
+        viewModel.activityConnectionStatus.observe(this, connectionStatusValue -> {
+            switch (connectionStatusValue) {
+                case STATUS_NONE:
+                    enableLoadBar();
+                    //Toast.makeText(this, "Никогде",Toast.LENGTH_SHORT).show();
+                    break;
+                case STATUS_ERROR:
+                    Toast.makeText(this, "Ошибка подключения, включите VPN. Повторная попытка...", Toast.LENGTH_SHORT).show();
+                    break;
+                case STATUS_CONNECTED:
+
+                    // уведомляем фрагмент что загрузка завершена
+                    if (currentState == FState.LOGIN_FRAGMENT) {
+                        // текущий фрагмент (всегда первый в списке)
+                        LoginFragmentInterface loginFragmentInterface =
+                                (LoginFragmentInterface) navFragmentManager.getFragments().get(0);
+                        //.findFragmentById(R.id.fragment_main);
+                        loginFragmentInterface.loadOver();
+                    }
+                    disableLoadBar();
+
+                    Toast.makeText(this, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        });
+
+        // отслеживаем авторизацию и состояние текущего пользователя
+        viewModel.currentUser.observe(this, user -> {
+
+            // это должно срабатывать, когда мы меняем пользователя целиком,
+            //  то есть его ссылку, а не данные в нем
+            if(user != null)
+                // переход на страницу пользователя
+                navController.navigate(R.id.action_loginFragment_to_mainFragment);
+        });
+
+
+        // тосты
+        viewModel.toastMessage.observe(this, s ->
+                Toast.makeText(this, s, Toast.LENGTH_SHORT).show());
+
+
+//        // открытие активности а не перерисовка
+//        if (savedInstanceState == null) {
+//
+//            // todo это соответственно переносится во ViewModel,
+//            //   а enableLoadBar() работает через подписку на ViewModel
+//            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
+//            //   LiveData и MutableLiveData :)
+//            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
+//            //   контекст view model не хранит, но он передаётся в методах
+//
+//            //
+//
+//        }
+
+
+        // ------------------------ Фрагменты и View --------------------------------
 
         // контроллер в котором пропсана навигация между фрагментами
         navController = Navigation.findNavController(this, R.id.activity_main_nav_host_fragment);
@@ -108,49 +176,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         // добавление слушателя кнопке назад (В качестве владельца слушателя текущая активити)
         getOnBackPressedDispatcher().addCallback(this, myBackCallback);
 
-
-        // ------------------------ Бизнес-логика --------------------------------
-        // открытие активности а не перерисовка
-        if (savedInstanceState == null) {
-
-            // todo это соответственно переносится во ViewModel,
-            //   а enableLoadBar() работает через подписку на ViewModel
-            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
-            //   LiveData и MutableLiveData :)
-            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
-            //   контекст view model не хранит, но он передаётся в методах
-
-            // todo Но это все скорее всего надо будет делать, когда начну работать с Mongodb
-            //
-
-
-
-            // просто отложенный вызов
-            enableLoadBar();
-            (new Handler(Looper.getMainLooper())).postDelayed(() -> {
-                        if (currentState == FState.LOGIN_FRAGMENT) {
-
-                            // текущий фрагмент (всегда первый в списке)
-                            LoginFragmentInterface loginFragmentInterface =
-                                    (LoginFragmentInterface) navFragmentManager.getFragments().get(0);
-                            //.findFragmentById(R.id.fragment_main);
-                            loginFragmentInterface.loadOver();
-
-                        }
-                        disableLoadBar();
-                    },
-                    1500);
-        }
-
-        //BottomNavigationView navView = findViewById(R.id.nav_view);
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        //AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-        //        R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
-        //        .build();
-        //NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);
-        //NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-        //NavigationUI.setupWithNavController(binding.navView, navController);
     }
 
     // Обработка нажатия кнопки назад
@@ -245,8 +270,8 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     // связь из фрагмента авторизации
     @Override
     public boolean authoriseUser(String email, String password) {
-        // переход на главную страницу
-        navController.navigate(R.id.action_loginFragment_to_mainFragment);
+        // отдаем данные аутентификации viewModel
+        viewModel.authUser(email, password);
         return true;
     }
 

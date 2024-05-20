@@ -37,14 +37,16 @@
             android:id="@+id/fragment_login_login_edit_email"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
-            android:hint="Эл.Почта" />
+            android:hint="Эл.Почта"
+            android:text="kd_djb@gmail.com" />
 
         <EditText
             android:id="@+id/fragment_login_login_edit_password"
             android:layout_width="match_parent"
             android:layout_height="@dimen/button_height"
             android:hint="Пароль"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:text="1234" />
 
         <TextView
             android:id="@+id/fragment_login_login_button"
@@ -78,7 +80,6 @@
             android:text="Регистрация"
             android:textColor="@color/button_text_color" />
     </LinearLayout>
-
 
 
 </RelativeLayout>
