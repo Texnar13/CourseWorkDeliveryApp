@@ -102,32 +102,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/containers_margin"
-                        android:background="@color/container_line_color"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="@dimen/containers_margin">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Большое и длинное описание какого-то уведомления. Очень важного и с большим описанием."
-                            android:textSize="15sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="end"
-                            android:text="Прочитано"
-                            android:textColor="@color/button_text_color"
-                            android:textSize="15sp" />
-
-                    </LinearLayout>
-
                 </LinearLayout>
 
             </LinearLayout>

@@ -3,9 +3,11 @@ package com.texnar13.deliveryapp.model;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class DBUser {
+public class DBUser implements Serializable {
+    public static final String TABLE_NAME = "User";
 
     public static final String USER_ID = "_id";
     public static final String USER_PASSWORD = "Password";
@@ -14,18 +16,18 @@ public class DBUser {
     public static final String USER_EMAIL = "Email";
     public static final String USER_NAME = "Name";
     public static final String USER_PHONE_NUMBER = "Phone number";
-    public static final String USER_PICTURE = "Pictue";
+    public static final String USER_PICTURE = "Pictue";// тут неправильно названо в бд
     public static final String USER_RATING = "Rating";
 
 
-    ObjectId _id;
-    String password;
-    String[] address;
-    String email;
-    String name;
-    String phoneNumber;
-    String picture;// тут неправильно названо в бд
-    Double rating;
+    private ObjectId _id;
+    private String password;
+    private String[] address;
+    private String email;
+    private String name;
+    private String phoneNumber;
+    private String picture;
+    private Double rating;
 
         /*
 _id: ObjectId('661aeaf92cb807852acaa410')
@@ -42,7 +44,7 @@ Pictue: "URL"
 Rating: 4.5   (Double)
         */
 
-    public DBUser(Document userDocument){
+    public DBUser(Document userDocument) {
         this._id = userDocument.getObjectId(USER_ID);
         this.password = userDocument.getString(USER_PASSWORD);
         this.email = userDocument.getString(USER_EMAIL);
@@ -56,5 +58,66 @@ Rating: 4.5   (Double)
         this.address = new String[4];
         for (int i = 0; i < 4; i++)
             this.address[i] = addressDocument.getString(USER_ADDRESS_LOCALS[i]);
+    }
+
+    public DBUser(ObjectId _id, String password, String[] address, String email, String name, String phoneNumber, String picture, Double rating) {
+        this._id = _id;
+        this.password = password;
+        this.address = address;
+        this.email = email;
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.picture = picture;
+        this.rating = rating;
+    }
+
+    public Document getDocument() {
+        Document addressArray = new Document();
+        for (int i = 0; i < USER_ADDRESS_LOCALS.length; i++)
+            addressArray.put(USER_ADDRESS_LOCALS[i], this.address[i]);
+
+        Document result = new Document();
+        result.put(USER_ID, this._id);
+        result.put(USER_PASSWORD, this.password);
+        result.put(USER_ADDRESS, addressArray);
+        result.put(USER_EMAIL, this.email);
+        result.put(USER_NAME, this.name);
+        result.put(USER_PHONE_NUMBER, this.phoneNumber);
+        result.put(USER_PICTURE, this.picture);
+        result.put(USER_RATING, this.rating);
+
+        return result;
+    }
+
+    public ObjectId get_id() {
+        return _id;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String[] getAddress() {
+        return address;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public Double getRating() {
+        return rating;
     }
 }

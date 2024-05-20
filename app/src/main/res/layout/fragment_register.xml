@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,62 +12,112 @@
         android:scaleType="centerCrop"
         android:src="@drawable/login_background" />
 
-    <LinearLayout
+
+    <ScrollView xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:layout_marginStart="@dimen/containers_margin"
-        android:layout_marginTop="@dimen/containers_margin"
-        android:layout_marginEnd="@dimen/containers_margin"
-        android:layout_marginBottom="@dimen/containers_margin"
-        android:background="@drawable/container_round"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingStart="@dimen/containers_margin"
-        android:paddingEnd="@dimen/containers_margin">
+        tools:context=".ui.EditUserDialogFragment">
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:gravity="center"
-            android:text="Регистрация"
-            android:textSize="20sp" />
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/containers_margin"
+            android:background="@drawable/container_round"
+            android:orientation="vertical"
+            android:padding="@dimen/containers_margin">
 
-        <EditText
-            android:id="@+id/fragment_login_login_edit_email"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:hint="Эл.Почта"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/button_height"
+                android:gravity="center"
+                android:text="Регистрация"
+                android:textSize="20sp" />
 
-        <EditText
-            android:id="@+id/fragment_login_login_edit_name"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:hint="Имя"
-            android:inputType="textPassword" />
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragment_register_input_mail"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:hint="E-mail">
 
-        <EditText
-            android:id="@+id/fragment_login_login_edit_password"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:hint="Пароль"
-            android:inputType="textPassword" />
-        <EditText
-            android:id="@+id/fragment_login_login_edit_password_repeat"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:hint="Повторите пароль"
-            android:inputType="textPassword" />
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/fragment_login_login_button"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/button_height"
-            android:gravity="center"
-            android:text="Создать аккаунт"
-            android:textColor="@color/button_text_color"
-            android:textSize="15sp" />
 
-    </LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragment_register_input_password"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:hint="Пароль">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragment_register_input_name"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:hint="Имя">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragment_register_input_phone"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:hint="Номер телефона"
+                app:counterEnabled="true"
+                app:counterMaxLength="11"
+                app:prefixText="+">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/fragment_register_input_address"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:hint="Страна, Город, Район, Улица">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+
+            <Button
+                android:id="@+id/fragment_register_create_button"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:text="Создать аккаунт"
+                android:textSize="@dimen/simple_text_size" />
+
+
+        </LinearLayout>
+    </ScrollView>
 
 </RelativeLayout>

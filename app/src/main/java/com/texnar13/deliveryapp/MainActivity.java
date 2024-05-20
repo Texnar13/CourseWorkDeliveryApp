@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
@@ -14,7 +13,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -22,12 +20,11 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.texnar13.deliveryapp.model.DBUser;
+import com.texnar13.deliveryapp.ui.EditUserDialogFragment;
 import com.texnar13.deliveryapp.ui.LoginFragmentInterface;
 import com.texnar13.deliveryapp.ui.MainActivityInterface;
 
 import java.util.Objects;
-
-import io.realm.Realm;
 
 
 public class MainActivity extends AppCompatActivity implements MainActivityInterface {
@@ -108,9 +105,22 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
             // это должно срабатывать, когда мы меняем пользователя целиком,
             //  то есть его ссылку, а не данные в нем
-            if(user != null)
+
+            // если пользователь получен из базы
+            if (user != null) {
                 // переход на страницу пользователя
-                navController.navigate(R.id.action_loginFragment_to_mainFragment);
+                if (currentState == FState.LOGIN_FRAGMENT){
+                    navController.navigate(R.id.action_loginFragment_to_userFragment);
+                }else if(currentState == FState.REGISTER_FRAGMENT){
+                    // переход на главную страницу
+                    navController.navigate(R.id.action_registerFragment_to_mainFragment);
+                }
+            } else {
+                // переход на страницу регистрации через backstack
+                myBackCallback.setEnabled(false);
+                getOnBackPressedDispatcher().onBackPressed();
+                myBackCallback.setEnabled(true);
+            }
         });
 
 
@@ -284,12 +294,10 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 // --------------------------------------- Register fragment ---------------------------------------
 
     @Override
-    public void registerUser(String email, String name, String password) {
+    public void registerUser(String password, String[] address, String email, String name, String phone) {
 
-        // переход на главную страницу
-        navController.navigate(R.id.action_registerFragment_to_mainFragment);
-
-        // todo проверка уже существующих пользователей
+        // отправляем во вьюмодель
+        viewModel.tryRegisterUser(password, address, email, name, phone);
     }
 
 
@@ -298,30 +306,39 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     @Override
     public void logout() {
 
-        // вызов выхода из активности с экраном загрузки
-        enableLoadBar();
-        (new Handler(Looper.getMainLooper())).postDelayed(() -> {
+        // удаление обьекта пользователя во вьюмодели
+        viewModel.logout();
 
-            // выключение экрана загрузки
-            disableLoadBar();
-
-            // переход на страницу регистрации
-            // тут единственное место где при нажатии кнопки назад пользователь не выходит из приложения
-            myBackCallback.setEnabled(false);
-            getOnBackPressedDispatcher().onBackPressed();
-            myBackCallback.setEnabled(true);
-
-        }, 1000);
+//        // вызов выхода из активности с экраном загрузки
+//        enableLoadBar();
+//        (new Handler(Looper.getMainLooper())).postDelayed(() -> {
+//
+//            // выключение экрана загрузки
+//            disableLoadBar();
+//
+//            // переход на страницу регистрации
+//            // тут единственное место где при нажатии кнопки назад пользователь не выходит из приложения
+//            myBackCallback.setEnabled(false);
+//            getOnBackPressedDispatcher().onBackPressed();
+//            myBackCallback.setEnabled(true);
+//
+//        }, 1000);
 
     }
 
 
     @Override
     public void goToEditUser() {
+        EditUserDialogFragment.newInstance(viewModel.currentUser.getValue())
+                .show(getSupportFragmentManager(), "edit_user_dialog");
+    }
 
-        // todo вызов диалога
-        Toast.makeText(this, "диалог редактирования", Toast.LENGTH_SHORT).show();
 
+// --------------------------------------- User edit dialog ---------------------------------------
+
+    @Override
+    public void editUser(DBUser editedUser) {
+        viewModel.editUser(editedUser);
     }
 
 }
