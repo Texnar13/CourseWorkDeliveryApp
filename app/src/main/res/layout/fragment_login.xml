@@ -20,7 +20,7 @@
         android:layout_marginTop="@dimen/containers_margin"
         android:layout_marginEnd="@dimen/containers_margin"
         android:layout_marginBottom="@dimen/containers_margin"
-        android:background="@drawable/container_round"
+        android:background="@drawable/container_round_transparent"
         android:gravity="center"
         android:orientation="vertical"
         android:paddingStart="@dimen/containers_margin"

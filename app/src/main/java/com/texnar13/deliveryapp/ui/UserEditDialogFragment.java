@@ -12,32 +12,32 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.texnar13.deliveryapp.R;
+import com.texnar13.deliveryapp.model.DBAddress;
 import com.texnar13.deliveryapp.model.DBUser;
 
 import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link EditUserDialogFragment#newInstance} factory method to
+ * Use the {@link UserEditDialogFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class EditUserDialogFragment extends DialogFragment {
+public class UserEditDialogFragment extends DialogFragment {
 
     // the fragment initialization parameters
     private static final String ARG_USER = "user";
 
-    public EditUserDialogFragment() {
+    public UserEditDialogFragment() {
         // Required empty public constructor
     }
 
     //Use this factory method
-    public static EditUserDialogFragment newInstance(DBUser user) {
-        EditUserDialogFragment fragment = new EditUserDialogFragment();
+    public static UserEditDialogFragment newInstance(DBUser user) {
+        UserEditDialogFragment fragment = new UserEditDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_USER, user);
         fragment.setArguments(args);
@@ -57,9 +57,8 @@ public class EditUserDialogFragment extends DialogFragment {
 
         // начинаем строить диалог
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle("Редактирование пользователя");
         // layout диалога
-        View dialogLayout = getLayoutInflater().inflate(R.layout.fragment_edit_user_dialog, null);
+        View dialogLayout = getLayoutInflater().inflate(R.layout.fragment_dialog_edit_user, null);
         builder.setView(dialogLayout);
 
 
@@ -73,13 +72,13 @@ public class EditUserDialogFragment extends DialogFragment {
         TextInputLayout inputPhone = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_phone);
         inputPhone.getEditText().setText(user.getPhoneNumber().substring(1));
         TextInputLayout inputCountry = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_country);
-        inputCountry.getEditText().setText(user.getAddress()[0]);
+        inputCountry.getEditText().setText(user.getAddress().getArray()[0]);
         TextInputLayout inputCity = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_city);
-        inputCity.getEditText().setText(user.getAddress()[1]);
+        inputCity.getEditText().setText(user.getAddress().getArray()[1]);
         TextInputLayout inputDistrict = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_district);
-        inputDistrict.getEditText().setText(user.getAddress()[2]);
+        inputDistrict.getEditText().setText(user.getAddress().getArray()[2]);
         TextInputLayout inputStreet = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_street);
-        inputStreet.getEditText().setText(user.getAddress()[3]);
+        inputStreet.getEditText().setText(user.getAddress().getArray()[3]);
 
         // кнопка отмены
         Button cancelButton = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_cancel_button);
@@ -143,12 +142,13 @@ public class EditUserDialogFragment extends DialogFragment {
                 ((MainActivityInterface) Objects.requireNonNull(getActivity())).editUser(new DBUser(
                         user.get_id(),
                         user.getPassword(),
+                        new DBAddress(
                         new String[]{
                                 inputCountry.getEditText().getText().toString(),
                                 inputCity.getEditText().getText().toString(),
                                 inputDistrict.getEditText().getText().toString(),
                                 inputStreet.getEditText().getText().toString()
-                        },
+                        }),
                         inputMail.getEditText().getText().toString(),
                         inputName.getEditText().getText().toString(),
                         "+" + inputPhone.getEditText().getText().toString(),
@@ -163,7 +163,7 @@ public class EditUserDialogFragment extends DialogFragment {
 
         // наконец создаем диалог и возвращаем его
         Dialog dialog = builder.create();
-        //dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         return dialog;
     }
 
@@ -172,7 +172,7 @@ public class EditUserDialogFragment extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_edit_user_dialog, container, false);
+        return inflater.inflate(R.layout.fragment_dialog_edit_user, container, false);
     }
 }
 

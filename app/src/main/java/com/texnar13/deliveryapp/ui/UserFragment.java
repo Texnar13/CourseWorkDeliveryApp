@@ -57,6 +57,8 @@ public class UserFragment extends Fragment {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_user, container, false);
 
+        MainViewModel mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+
 // ------------------------------------------- разметка -------------------------------------------
 
         // кнопка выхода из аккаунта
@@ -67,8 +69,9 @@ public class UserFragment extends Fragment {
 
         // кнопка редактирования информации о пользователе
         rootView.findViewById(R.id.fragment_user_edit_user_button).setOnClickListener(view -> {
-            // вызов метода в Activity
-            ((MainActivityInterface) Objects.requireNonNull(getActivity())).goToEditUser();
+            // вызов диалога
+            UserEditDialogFragment.newInstance(mainViewModel.currentUser.getValue())
+                    .show(getParentFragmentManager(), "edit_user_dialog");
         });
 
         //rootView.findViewById(R.id.fragment_user_user_img);
@@ -82,16 +85,15 @@ public class UserFragment extends Fragment {
 
 // -------------------------------- подписываемся на изменения во viewModel --------------------------------
 
-        MainViewModel mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         // глобальное изменение переменной USER (создание или очистка)
         mainViewModel.currentUser.observe(this, dbUser -> {
 
             // вывод строки состояния пользователя
             if (dbUser != null) {
                 StringBuilder address = new StringBuilder();
-                for (int i = 0; i < dbUser.getAddress().length; i++) {
-                    address.append(dbUser.getAddress()[i]);
-                    if (i != dbUser.getAddress().length - 1) address.append(", ");
+                for (int i = 0; i < dbUser.getAddress().getArray().length; i++) {
+                    address.append(dbUser.getAddress().getArray()[i]);
+                    if (i != dbUser.getAddress().getArray().length - 1) address.append(", ");
                 }
 
                 userDescription.setText(String.format(Locale.getDefault(),

@@ -3,7 +3,8 @@
 
     <color name="colorOnSecondary">#FFFFFFFF</color>
 
-    <color name="containers_color">#B02D2D2D</color>
+    <color name="containers_color">#FF2D2D2D</color>
+    <color name="containers_color_transparent">#B02D2D2D</color>
     <color name="container_line_color">#5D5D5D</color>
     <color name="container_line_color2">#3D5D5D</color>
 

@@ -1,16 +1,18 @@
 package com.texnar13.deliveryapp;
 
-import static com.texnar13.deliveryapp.RegisterActivityDeleteMe.MY_LOG;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.texnar13.deliveryapp.model.DBAddress;
+import com.texnar13.deliveryapp.model.DBExpedition;
 import com.texnar13.deliveryapp.model.DBNotification;
+import com.texnar13.deliveryapp.model.DBPackage;
 import com.texnar13.deliveryapp.model.DBUser;
 
 import org.bson.Document;
@@ -20,6 +22,7 @@ import org.bson.types.ObjectId;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,6 +37,8 @@ import io.realm.mongodb.mongo.MongoDatabase;
 import io.realm.mongodb.mongo.iterable.MongoCursor;
 
 public class MainViewModel extends ViewModel {
+
+    private static final String MY_LOG = "Test";
 
     private String apiKey;
     private MongoDatabase mongoDatabase = null;
@@ -67,8 +72,21 @@ public class MainViewModel extends ViewModel {
     // уведомления
     public MutableLiveData<List<DBNotification>> currentUserNotifications = new MutableLiveData<>();
 
+    // посылки пользователя
+    public MutableLiveData<List<DBExpedition>> currentUserExpeditions = new MutableLiveData<>();
+
 
 // ------------------------------------------ Главные методы ---------------------------------------
+
+// todo это соответственно переносится во ViewModel,
+//            //   а enableLoadBar() работает через подписку на ViewModel
+//            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
+//            //   LiveData и MutableLiveData :)
+//            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
+//            //   контекст view model не хранит, но он передаётся в методах
+//
+//            //
+
 
     public MainViewModel(String apiKey) {
         this.apiKey = apiKey;
@@ -82,8 +100,6 @@ public class MainViewModel extends ViewModel {
 
         // подключение к онлайн бд
         connectDB();
-
-
     }
 
     // уничтожение активности
@@ -152,15 +168,11 @@ public class MainViewModel extends ViewModel {
                 } else {
                     // создаем пользователя
 
-                    // адрес
-                    Document addressDoc = new Document();
-                    for (int i = 0; i < DBUser.USER_ADDRESS_LOCALS.length; i++)
-                        addressDoc.put(DBUser.USER_ADDRESS_LOCALS[i], address[i]);
-
                     // создаем новый документ пользователя
                     Document newUser = new Document()
                             .append(DBUser.USER_PASSWORD, hashPassword(password))
-                            .append(DBUser.USER_ADDRESS, addressDoc)
+                            .append(DBUser.USER_ADDRESS,
+                                    DBAddress.getDocumentFromAddressArray(address))
                             .append(DBUser.USER_EMAIL, email)
                             .append(DBUser.USER_NAME, name)
                             .append(DBUser.USER_PHONE_NUMBER, phone)
@@ -172,7 +184,7 @@ public class MainViewModel extends ViewModel {
                         if (insertResult.isSuccess()) {
                             sendToast("Пользователь успешно создан");
 
-                            // и сразу заходим за этого пользователя
+                            // и сразу загружаем и заходим за этого пользователя
                             authUser(email, password);
                         } else {
                             sendToast("Ошибка при создании пользователя");
@@ -210,6 +222,7 @@ public class MainViewModel extends ViewModel {
 
                         // Получаем данные пользователя
                         loadUserNotifications();
+                        loadUserExpeditions();
                     } else {
                         sendToast("Пароль неподходит!");
                     }
@@ -219,24 +232,10 @@ public class MainViewModel extends ViewModel {
                 sendToast("Ошибка подключения");
             }
         });
-
-
-
-        /*
-_id: ObjectId('661aeaf92cb807852acaa410')
-Password: "dmsdkadCSD1232$$" (1234)
-Address: Object
-Email: "kd_djb@gmail.com"
-Name: "Abdelkader"
-Phone number: "+79993243245"
-Pictue: "URL"
-Rating: 4.5
-        */
-
     }
 
     // редактирование пользователя
-    public void editUser(DBUser editedUserData) {
+    public void editUser(@NonNull DBUser editedUserData) {
         Document editedDocument = editedUserData.getDocument();
 
         // получаем таблицу пользователей
@@ -261,7 +260,6 @@ Rating: 4.5
             }
         });
     }
-
 
     void loadUserNotifications() {
         DBUser user = currentUser.getValue();
@@ -291,6 +289,7 @@ Rating: 4.5
         }
     }
 
+    // пометить уведомление прочитанным
     public void markReadAdminNotification(ObjectId notificationID) {
 
         // получаем таблицу уведомлений
@@ -311,6 +310,100 @@ Rating: 4.5
                 sendToast("Ошибка при обновлении поля");
             }
         });
+    }
+
+    // загрузить отправления пользователя
+    void loadUserExpeditions() {
+        DBUser user = currentUser.getValue();
+        if (user != null) {
+
+            // получаем таблицу отправлений
+            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
+
+            // поиск отправлений пользователя в бд
+            Document query = new Document(DBExpedition.EXPEDITION_SENDER, user.get_id());
+
+            expeditionsCollection.find(query).iterator().getAsync(result -> {
+                if (result.isSuccess()) {
+
+                    // сохраняем все отправления в лист
+                    MongoCursor<Document> cursor = result.get();
+
+                    // пробегаемся по всем посылкам
+                    List<DBExpedition> loadedData = new ArrayList<>();
+                    while (cursor.hasNext())
+                        loadedData.add(new DBExpedition(cursor.next()));
+
+                    // передаем получившийся лист в глобальный отслеживаемый
+                    currentUserExpeditions.setValue(loadedData);
+                }
+            });
+        }
+    }
+
+    public void createExpedition(DBExpedition expedition) {
+        DBUser user = currentUser.getValue();
+        if (user != null) {
+
+            // получаем таблицу отправлений
+            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
+
+            Document expeditionDocument = new Document()
+                    .append(DBExpedition.EXPEDITION_ADDRESS_RECEIVER, expedition.getAddressReceiver().getDocument())
+                    .append(DBExpedition.EXPEDITION_ADDRESS_SENDER, expedition.getAddressSender().getDocument())
+                    .append(DBExpedition.EXPEDITION_STATUS, expedition.getStatus())
+                    .append(DBExpedition.EXPEDITION_SENDER, user.get_id())
+                    .append(DBExpedition.EXPEDITION_PACKAGE, expedition.getPackage().toDocument());
+
+            // вставка нового пользователя в коллекцию
+            expeditionsCollection.insertOne(expeditionDocument).getAsync(insertResult -> {
+                if (insertResult.isSuccess()) {
+                    sendToast("Отправление успешно создано");
+
+                    // и сразу загрузка всего заново
+                    loadUserExpeditions();
+
+                } else {
+                    sendToast("Ошибка при создании отправления = " + insertResult.getError());
+                    Log.e("Test", "Ошибка при создании отправления = " + insertResult.getError());
+                }
+            });
+
+        }
+    }
+
+    public void editExpedition(DBExpedition editedExpeditionData) {
+        DBUser user = currentUser.getValue();
+        if (user != null) {
+
+            // получаем таблицу отправлений
+            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
+
+            // документ редактирования
+            Document editedDocument = editedExpeditionData.getDocument();
+
+
+            // Обновляем документ пользователя новыми данными
+            expeditionsCollection.findOneAndReplace(
+                    new Document(DBExpedition.EXPEDITION_ID, editedExpeditionData.get_id()),
+                    editedDocument
+            ).getAsync(result -> {
+                if (result.isSuccess()) {
+                    Document updatedDocument = result.get();
+                    if (updatedDocument != null) {
+                        // если данные сохранены успешно, обновляем глобальную копию переменной и интерфейс
+                        loadUserExpeditions();
+
+                        sendToast("Данные отправления успешно сохранены");
+                    } else {
+                        sendToast("Ошибка, отправление не найдено");
+                    }
+                } else {
+                    sendToast("Ошибка при сохранении данных отправления");
+                }
+            });
+
+        }
     }
 
 

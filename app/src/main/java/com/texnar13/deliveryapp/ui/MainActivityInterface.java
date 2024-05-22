@@ -6,7 +6,7 @@ public interface MainActivityInterface {
 
 // ----------------------------------------- login fragment ----------------------------------------
 
-    boolean authoriseUser(String email, String password);
+    void authoriseUser(String email, String password);
 
     void gotoRegister();
 
@@ -17,8 +17,6 @@ public interface MainActivityInterface {
 // --------------------------------------- User fragment ---------------------------------------
 
     void logout();
-
-    void goToEditUser();
 
 // --------------------------------------- User edit dialog ---------------------------------------
 

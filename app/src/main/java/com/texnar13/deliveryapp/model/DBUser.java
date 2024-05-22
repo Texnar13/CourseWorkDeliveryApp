@@ -12,7 +12,6 @@ public class DBUser implements Serializable {
     public static final String USER_ID = "_id";
     public static final String USER_PASSWORD = "Password";
     public static final String USER_ADDRESS = "Address";
-    public static final String[] USER_ADDRESS_LOCALS = {"country", "city", "district", "street"};
     public static final String USER_EMAIL = "Email";
     public static final String USER_NAME = "Name";
     public static final String USER_PHONE_NUMBER = "Phone number";
@@ -22,7 +21,7 @@ public class DBUser implements Serializable {
 
     private ObjectId _id;
     private String password;
-    private String[] address;
+    private DBAddress address;
     private String email;
     private String name;
     private String phoneNumber;
@@ -47,20 +46,15 @@ Rating: 4.5   (Double)
     public DBUser(Document userDocument) {
         this._id = userDocument.getObjectId(USER_ID);
         this.password = userDocument.getString(USER_PASSWORD);
+        this.address = new DBAddress((Document) userDocument.get(USER_ADDRESS));
         this.email = userDocument.getString(USER_EMAIL);
         this.name = userDocument.getString(USER_NAME);
         this.phoneNumber = userDocument.getString(USER_PHONE_NUMBER);
         this.picture = userDocument.getString(USER_PICTURE);
         this.rating = userDocument.getDouble(USER_RATING);
-
-        // кастуем документ в массив адреса
-        Document addressDocument = (Document) Objects.requireNonNull(userDocument.get(USER_ADDRESS));
-        this.address = new String[4];
-        for (int i = 0; i < 4; i++)
-            this.address[i] = addressDocument.getString(USER_ADDRESS_LOCALS[i]);
     }
 
-    public DBUser(ObjectId _id, String password, String[] address, String email, String name, String phoneNumber, String picture, Double rating) {
+    public DBUser(ObjectId _id, String password, DBAddress address, String email, String name, String phoneNumber, String picture, Double rating) {
         this._id = _id;
         this.password = password;
         this.address = address;
@@ -72,14 +66,11 @@ Rating: 4.5   (Double)
     }
 
     public Document getDocument() {
-        Document addressArray = new Document();
-        for (int i = 0; i < USER_ADDRESS_LOCALS.length; i++)
-            addressArray.put(USER_ADDRESS_LOCALS[i], this.address[i]);
 
         Document result = new Document();
         result.put(USER_ID, this._id);
         result.put(USER_PASSWORD, this.password);
-        result.put(USER_ADDRESS, addressArray);
+        result.put(USER_ADDRESS, address.getDocument());
         result.put(USER_EMAIL, this.email);
         result.put(USER_NAME, this.name);
         result.put(USER_PHONE_NUMBER, this.phoneNumber);
@@ -97,7 +88,7 @@ Rating: 4.5   (Double)
         return password;
     }
 
-    public String[] getAddress() {
+    public DBAddress getAddress() {
         return address;
     }
 

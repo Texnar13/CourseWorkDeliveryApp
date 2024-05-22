@@ -2,8 +2,6 @@ package com.texnar13.deliveryapp;
 
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -20,7 +18,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.texnar13.deliveryapp.model.DBUser;
-import com.texnar13.deliveryapp.ui.EditUserDialogFragment;
+import com.texnar13.deliveryapp.ui.UserEditDialogFragment;
 import com.texnar13.deliveryapp.ui.LoginFragmentInterface;
 import com.texnar13.deliveryapp.ui.MainActivityInterface;
 
@@ -131,16 +129,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
 //        // открытие активности а не перерисовка
 //        if (savedInstanceState == null) {
-//
-//            // todo это соответственно переносится во ViewModel,
-//            //   а enableLoadBar() работает через подписку на ViewModel
-//            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
-//            //   LiveData и MutableLiveData :)
-//            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
-//            //   контекст view model не хранит, но он передаётся в методах
-//
-//            //
-//
 //        }
 
 
@@ -279,10 +267,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
     // связь из фрагмента авторизации
     @Override
-    public boolean authoriseUser(String email, String password) {
+    public void authoriseUser(String email, String password) {
         // отдаем данные аутентификации viewModel
         viewModel.authUser(email, password);
-        return true;
     }
 
     @Override
@@ -324,13 +311,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 //
 //        }, 1000);
 
-    }
-
-
-    @Override
-    public void goToEditUser() {
-        EditUserDialogFragment.newInstance(viewModel.currentUser.getValue())
-                .show(getSupportFragmentManager(), "edit_user_dialog");
     }
 
 

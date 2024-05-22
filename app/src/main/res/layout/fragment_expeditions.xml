@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -16,6 +16,7 @@
             android:layout_marginStart="@dimen/containers_margin"
             android:layout_marginEnd="@dimen/containers_margin"
             android:layout_marginBottom="@dimen/button_height"
+            android:paddingBottom="100dp"
             android:orientation="vertical">
 
             <RelativeLayout
@@ -82,68 +83,15 @@
                 </LinearLayout>
             </RelativeLayout>
 
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/containers_margin"
-                android:background="@drawable/container_round"
-                android:padding="@dimen/containers_margin">
-
-                <LinearLayout
-                    android:id="@+id/fragment_expeditions_box_description_container2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_toStartOf="@+id/fragment_expeditions_box_image_container2"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Посылка Открытка"
-                        android:textSize="20sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Категория письмо\nиз Moscow, Russia -> в Kursk, Russia\nВес 0.1кг\nГабариты 1x10x20cm\nАдрес отправителя: Москва, ул. Волшебная 2, кв 35\nАдрес получателя: Курск, ул. Строителей 2, кв 35"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ОТПРАВЛЕНА"
-                        android:textColor="@color/sended_mail_text_color"
-                        android:textSize="15sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/fragment_expeditions_box_image_container2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignTop="@+id/fragment_expeditions_box_description_container2"
-                    android:layout_alignBottom="@+id/fragment_expeditions_box_description_container2"
-                    android:gravity="end"
-                    android:orientation="vertical">
-
-                    <ImageView
-                        android:layout_width="@dimen/expeditions_fragment_box_photo_width"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="@dimen/containers_margin"
-                        android:layout_marginBottom="@dimen/containers_margin"
-                        android:adjustViewBounds="true"
-                        android:src="@drawable/box_img_example" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="bottom"
-                        android:text="Написать"
-                        android:textColor="@color/button_text_color"
-                        android:textSize="15sp" />
-                </LinearLayout>
-            </RelativeLayout>
         </LinearLayout>
     </ScrollView>
-</FrameLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fragment_expeditions_add_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/baseline_add_24"
+        android:layout_margin="@dimen/containers_margin"/>
+</RelativeLayout>
