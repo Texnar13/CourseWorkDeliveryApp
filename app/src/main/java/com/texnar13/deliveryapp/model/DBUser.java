@@ -1,10 +1,9 @@
 package com.texnar13.deliveryapp.model;
 
-import org.bson.Document;
-import org.bson.types.ObjectId;
+//import org.bson.Document;
+//import org.bson.types.ObjectId;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 public class DBUser implements Serializable {
     public static final String TABLE_NAME = "User";
@@ -19,7 +18,7 @@ public class DBUser implements Serializable {
     public static final String USER_RATING = "Rating";
 
 
-    private ObjectId _id;
+    private long _id;
     private String password;
     private DBAddress address;
     private String email;

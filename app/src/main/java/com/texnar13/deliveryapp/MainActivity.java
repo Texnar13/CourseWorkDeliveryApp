@@ -2,6 +2,7 @@ package com.texnar13.deliveryapp;
 
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Debug;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -63,6 +64,22 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
 
+        //Get VM Heap Size by calling:
+        Log.e("Test", "totalMemory = " + Runtime.getRuntime().totalMemory());
+        //Get Allocated VM Memory by calling:
+
+        Log.e("Test", "totalMemory - freeMemory= " +
+                (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));
+        //Get VM Heap Size Limit by calling:
+
+        Log.e("Test", "maxMemory= " +
+                Runtime.getRuntime().maxMemory());
+        //Get Native Allocated Memory by calling:
+
+        Log.e("Test", "getNativeHeapAllocatedSize= " +
+                Debug.getNativeHeapAllocatedSize());
+
+
         // ------------------------ Подписка на ViewModel --------------------------------
 
 
@@ -107,9 +124,9 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
             // если пользователь получен из базы
             if (user != null) {
                 // переход на страницу пользователя
-                if (currentState == FState.LOGIN_FRAGMENT){
+                if (currentState == FState.LOGIN_FRAGMENT) {
                     navController.navigate(R.id.action_loginFragment_to_userFragment);
-                }else if(currentState == FState.REGISTER_FRAGMENT){
+                } else if (currentState == FState.REGISTER_FRAGMENT) {
                     // переход на главную страницу
                     navController.navigate(R.id.action_registerFragment_to_mainFragment);
                 }
@@ -265,26 +282,11 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
 
 // ----------------------------------------- login fragment ----------------------------------------
 
-    // связь из фрагмента авторизации
-    @Override
-    public void authoriseUser(String email, String password) {
-        // отдаем данные аутентификации viewModel
-        viewModel.authUser(email, password);
-    }
-
-    @Override
-    public void gotoRegister() {
-        // переход на страницу регистрации
-        navController.navigate(R.id.action_loginFragment_to_registerFragment);
-    }
-
 // --------------------------------------- Register fragment ---------------------------------------
 
     @Override
     public void registerUser(String password, String[] address, String email, String name, String phone) {
 
-        // отправляем во вьюмодель
-        viewModel.tryRegisterUser(password, address, email, name, phone);
     }
 
 

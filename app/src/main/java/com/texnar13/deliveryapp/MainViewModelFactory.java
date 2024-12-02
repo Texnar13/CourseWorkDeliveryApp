@@ -12,7 +12,7 @@ import io.realm.Realm;
 public class MainViewModelFactory implements ViewModelProvider.Factory {
 
     Context context;
-    MainViewModelFactory(Context context){
+    public MainViewModelFactory(Context context){
         this.context = context;
     }
 

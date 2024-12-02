@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/containers_margin"
+    android:background="@drawable/container_round"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="@dimen/containers_margin">
+
+    <TextView
+        android:id="@+id/element_trip_box_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Иванов Пётр"
+        android:textSize="20sp" />
+
+    <TextView
+
+        android:id="@+id/element_trip_box_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Отправляюсь 24.03.2024 \nиз Moscow, Russia → в Kursk, Russia\nМогу взять 3кг веса"
+        android:textSize="15sp" />
+
+    <TextView
+        android:id="@+id/element_trip_box_join_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:text="Сделать заявку"
+        android:textColor="@color/button_text_color"
+        android:textSize="15sp" />
+</LinearLayout>

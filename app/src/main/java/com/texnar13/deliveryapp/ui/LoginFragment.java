@@ -8,7 +8,11 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
 
+import com.texnar13.deliveryapp.MainViewModel;
+import com.texnar13.deliveryapp.MainViewModelFactory;
 import com.texnar13.deliveryapp.R;
 
 import java.util.Objects;
@@ -41,7 +45,7 @@ public class LoginFragment extends Fragment implements LoginFragmentInterface {
             //connectingProgressBar.setVisibility(View.INVISIBLE);
             loginContainer.setVisibility(View.VISIBLE);
             registerButton.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             //connectingProgressBar.setVisibility(View.VISIBLE);
             loginContainer.setVisibility(View.INVISIBLE);
             registerButton.setVisibility(View.INVISIBLE);
@@ -54,8 +58,12 @@ public class LoginFragment extends Fragment implements LoginFragmentInterface {
                 EditText email = rootView.findViewById(R.id.fragment_login_login_edit_email);
                 EditText password = rootView.findViewById(R.id.fragment_login_login_edit_password);
 
-                // передача данных в Activity
-                ((MainActivityInterface) Objects.requireNonNull(getActivity())).authoriseUser(
+
+
+                // отдаем данные аутентификации viewModel
+                MainViewModel viewModel = (new ViewModelProvider(this,
+                        new MainViewModelFactory(requireActivity()))).get(MainViewModel.class);
+                viewModel.authUser(
                         email.getText().toString().trim(),
                         password.getText().toString().trim()
                 );
@@ -65,7 +73,11 @@ public class LoginFragment extends Fragment implements LoginFragmentInterface {
         // переход на фрагмент регистрации
         registerButton.setOnClickListener(view -> {
             if (loaded) {
-                ((MainActivityInterface) Objects.requireNonNull(getActivity())).gotoRegister();
+
+                // переход на страницу регистрации
+                Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).
+                        navigate(R.id.action_loginFragment_to_registerFragment);
+
             }
         });
 
