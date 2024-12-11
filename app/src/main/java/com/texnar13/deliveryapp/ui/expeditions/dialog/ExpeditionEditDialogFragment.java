@@ -1,4 +1,4 @@
-package com.texnar13.deliveryapp.ui;
+package com.texnar13.deliveryapp.ui.expeditions.dialog;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -7,23 +7,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.textfield.TextInputLayout;
-import com.texnar13.deliveryapp.MainViewModel;
 import com.texnar13.deliveryapp.R;
 import com.texnar13.deliveryapp.model.DBAddress;
 import com.texnar13.deliveryapp.model.DBExpedition;
 import com.texnar13.deliveryapp.model.DBPackage;
-import com.texnar13.deliveryapp.model.DBUser;
-
-import java.util.Objects;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 public class ExpeditionEditDialogFragment extends DialogFragment {
 
@@ -91,17 +86,17 @@ public class ExpeditionEditDialogFragment extends DialogFragment {
             titleText.setText("Cоздание отправления");
             idText.setText("id=new");
         } else {
-            titleText.setText("Редактирование отправления");
-            idText.setText("id=" + expedition.get_id());
-
-            senderAddressField.getEditText().setText(expedition.getAddressSender().getString());
-            receiverAddressField.getEditText().setText(expedition.getAddressReceiver().getString());
-
-            boxNameField.getEditText().setText(expedition.getPackage().getName());
-            boxCategoryField.getEditText().setText(expedition.getPackage().getCategory());
-            boxDescriptionField.getEditText().setText(expedition.getPackage().getDescription());
-            boxDimensField.getEditText().setText(expedition.getPackage().getDimensionsString());
-            boxWeightField.getEditText().setText("" + expedition.getPackage().getWeight());
+//            titleText.setText("Редактирование отправления");
+//            idText.setText("id=" + expedition.get_id());
+//
+//            senderAddressField.getEditText().setText(expedition.getAddressSender().getString());
+//            receiverAddressField.getEditText().setText(expedition.getAddressReceiver().getString());
+//
+//            boxNameField.getEditText().setText(expedition.getPackage().getName());
+//            boxCategoryField.getEditText().setText(expedition.getPackage().getCategory());
+//            boxDescriptionField.getEditText().setText(expedition.getPackage().getDescription());
+//            boxDimensField.getEditText().setText(expedition.getPackage().getDimensionsString());
+//            boxWeightField.getEditText().setText("" + expedition.getPackage().getWeight());
         }
 
         // кнопка сохранения

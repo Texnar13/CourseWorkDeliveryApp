@@ -1,4 +1,4 @@
-package com.texnar13.deliveryapp;
+package com.texnar13.deliveryapp.app;
 
 
 

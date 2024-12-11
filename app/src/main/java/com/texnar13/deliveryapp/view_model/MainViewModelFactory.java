@@ -1,4 +1,4 @@
-package com.texnar13.deliveryapp;
+package com.texnar13.deliveryapp.view_model;
 
 import android.content.Context;
 
@@ -6,7 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-import io.realm.Realm;
+import com.texnar13.deliveryapp.R;
+
 
 // фабрика создания MainViewModel
 public class MainViewModelFactory implements ViewModelProvider.Factory {
@@ -23,7 +24,7 @@ public class MainViewModelFactory implements ViewModelProvider.Factory {
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
 
         // инициализация бд
-        Realm.init(context);
+        //Realm.init(context);
 
         // получение строки с апи ключом
         String apiKey = context.getResources().getString(R.string.mongodb_api_key);

@@ -1,27 +1,21 @@
 package com.texnar13.deliveryapp.ui;
 
+import static androidx.navigation.Navigation.findNavController;
+
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
-
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.Switch;
 import android.widget.TextView;
 
-import com.texnar13.deliveryapp.MainViewModel;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
 import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.DBNotification;
-
-import org.bson.types.ObjectId;
-
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Objects;
+import com.texnar13.deliveryapp.ui.login.LoginFragment;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 public class UserFragment extends Fragment {
 
@@ -61,16 +55,26 @@ public class UserFragment extends Fragment {
 
 // ------------------------------------------- разметка -------------------------------------------
 
+        Log.e("TAG", "onCreateView: user = " + mainViewModel.getCurrentUser().getValue());
+
+
         // кнопка выхода из аккаунта
         rootView.findViewById(R.id.fragment_user_logout_button).setOnClickListener(view -> {
-            // вызов метода в Activity
-            ((MainActivityInterface) Objects.requireNonNull(getActivity())).logout();
+
+            mainViewModel.logout();
+
+            // TODO НЕ РАБОТАЕТ СДЕЛАТЬ, работает при двойном нажатии
+            // переход на страницу регистрации
+            //requireActivity().getOnBackPressedDispatcher().onBackPressed();
+            findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).popBackStack();
+
         });
 
         // кнопка редактирования информации о пользователе
         rootView.findViewById(R.id.fragment_user_edit_user_button).setOnClickListener(view -> {
+            Log.e("TAG", "edit user: user = " + mainViewModel.getCurrentUser().getValue());
             // вызов диалога
-            UserEditDialogFragment.newInstance(mainViewModel.currentUser.getValue())
+            UserEditDialogFragment.newInstance(mainViewModel.getCurrentUser().getValue())
                     .show(getParentFragmentManager(), "edit_user_dialog");
         });
 
@@ -85,72 +89,72 @@ public class UserFragment extends Fragment {
 
 // -------------------------------- подписываемся на изменения во viewModel --------------------------------
 
-        // глобальное изменение переменной USER (создание или очистка)
-        mainViewModel.currentUser.observe(this, dbUser -> {
-
-            // вывод строки состояния пользователя
-            if (dbUser != null) {
-                StringBuilder address = new StringBuilder();
-                for (int i = 0; i < dbUser.getAddress().getArray().length; i++) {
-                    address.append(dbUser.getAddress().getArray()[i]);
-                    if (i != dbUser.getAddress().getArray().length - 1) address.append(", ");
-                }
-
-                userDescription.setText(String.format(Locale.getDefault(),
-                        "Рейтинг %.1f/5\nЭл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
-                        dbUser.getRating(),
-                        dbUser.getEmail(),
-                        address,
-                        dbUser.getName(),
-                        dbUser.getPhoneNumber()
-
-                ));
-            }
-
-        });
+//        // глобальное изменение переменной USER (создание или очистка)
+//        mainViewModel.currentUser.observe(this, dbUser -> {
+//
+//            // вывод строки состояния пользователя
+//            if (dbUser != null) {
+//                StringBuilder address = new StringBuilder();
+//                for (int i = 0; i < dbUser.getAddress().getArray().length; i++) {
+//                    address.append(dbUser.getAddress().getArray()[i]);
+//                    if (i != dbUser.getAddress().getArray().length - 1) address.append(", ");
+//                }
+//
+//                userDescription.setText(String.format(Locale.getDefault(),
+//                        "Рейтинг %.1f/5\nЭл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
+//                        dbUser.getRating(),
+//                        dbUser.getEmail(),
+//                        address,
+//                        dbUser.getName(),
+//                        dbUser.getPhoneNumber()
+//
+//                ));
+//            }
+//
+//        });
 
         // глобальное изменение переменной с уведомлениями пользователя
-        mainViewModel.currentUserNotifications.observe(this, notifications -> {
-
-            // вывод списка
-            userNotificationsContainer.removeAllViews();
-
-
-            Iterator<DBNotification> notificationIterator = notifications.iterator();
-            while (notificationIterator.hasNext()) {
-                // получеам конкретное уведомление
-                DBNotification notificationUnit = notificationIterator.next();
-
-                // создание разметки
-                View notificationViewElement = getLayoutInflater().inflate(R.layout.element_user_notification, userNotificationsContainer);
-                TextView textView = notificationViewElement.findViewById(R.id.element_user_notification_text);
-                textView.setText(notificationUnit.getNotificationMessage());
-
-                // кнопки
-                View buttonApprove = notificationViewElement.findViewById(R.id.element_user_notification_button_approve);
-                View buttonDisagree = notificationViewElement.findViewById(R.id.element_user_notification_button_disagree);
-                View buttonRead = notificationViewElement.findViewById(R.id.element_user_notification_button_read);
-
-                switch (notificationUnit.getNotificationType()) {
-                    // уведомления администратора
-                    case DBNotification.NOTIFICATION_TYPE_VALUE_ADMIN:
-
-                        // кнопки
-                        buttonApprove.setVisibility(View.INVISIBLE);
-                        buttonDisagree.setVisibility(View.INVISIBLE);
-                        buttonRead.setOnClickListener(v -> mainViewModel.markReadAdminNotification(
-                                notificationUnit.get_id()
-                        ));
-
-                        break;
-                    case DBNotification.NOTIFICATION_TYPE_VALUE_SEND_REQUEST:
-                        break;
-                    case DBNotification.NOTIFICATION_TYPE_VALUE_EXPEDITION:
-                        break;
-                }
-
-            }
-        });
+//        mainViewModel.currentUserNotifications.observe(this, notifications -> {
+//
+//            // вывод списка
+//            userNotificationsContainer.removeAllViews();
+//
+//
+//            Iterator<DBNotification> notificationIterator = notifications.iterator();
+//            while (notificationIterator.hasNext()) {
+//                // получеам конкретное уведомление
+//                DBNotification notificationUnit = notificationIterator.next();
+//
+//                // создание разметки
+//                View notificationViewElement = getLayoutInflater().inflate(R.layout.element_user_notification, userNotificationsContainer);
+//                TextView textView = notificationViewElement.findViewById(R.id.element_user_notification_text);
+//                textView.setText(notificationUnit.getNotificationMessage());
+//
+//                // кнопки
+//                View buttonApprove = notificationViewElement.findViewById(R.id.element_user_notification_button_approve);
+//                View buttonDisagree = notificationViewElement.findViewById(R.id.element_user_notification_button_disagree);
+//                View buttonRead = notificationViewElement.findViewById(R.id.element_user_notification_button_read);
+//
+//                switch (notificationUnit.getNotificationType()) {
+//                    // уведомления администратора
+//                    case DBNotification.NOTIFICATION_TYPE_VALUE_ADMIN:
+//
+//                        // кнопки
+//                        buttonApprove.setVisibility(View.INVISIBLE);
+//                        buttonDisagree.setVisibility(View.INVISIBLE);
+//                        buttonRead.setOnClickListener(v -> mainViewModel.markReadAdminNotification(
+//                                notificationUnit.get_id()
+//                        ));
+//
+//                        break;
+//                    case DBNotification.NOTIFICATION_TYPE_VALUE_SEND_REQUEST:
+//                        break;
+//                    case DBNotification.NOTIFICATION_TYPE_VALUE_EXPEDITION:
+//                        break;
+//                }
+//
+//            }
+//        });
 
 
         return rootView;

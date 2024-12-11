@@ -9,14 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
-import com.texnar13.deliveryapp.MainViewModel;
 import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.DBExpedition;
-import com.texnar13.deliveryapp.model.DBTrip;
-
-import java.util.Locale;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 public class TrajectoriesFragment extends Fragment {
 
@@ -46,11 +41,11 @@ public class TrajectoriesFragment extends Fragment {
 
 // -------------------------------- подписываемся на изменения во viewModel --------------------------------
 
-        // глобальное изменение переменной
-        mainViewModel.currentLoadedTrips.observe(this, dbUsers -> {
-
-            // вывод списка
-            boxesContainer.removeAllViews();
+//        // глобальное изменение переменной
+//        mainViewModel.currentLoadedTrips.observe(this, dbUsers -> {
+//
+//            // вывод списка
+//            boxesContainer.removeAllViews();
 
 //            // проходимся по всем отправлениям
 //            for (DBTrip tripUnit : dbUsers) {
@@ -142,10 +137,7 @@ public class TrajectoriesFragment extends Fragment {
 //                        notificationViewElement,layoutParams
 //                );
 //            }
-
-
-
-        });
+//        });
 
 
 

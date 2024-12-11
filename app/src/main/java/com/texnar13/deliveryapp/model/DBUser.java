@@ -42,18 +42,18 @@ Pictue: "URL"
 Rating: 4.5   (Double)
         */
 
-    public DBUser(Document userDocument) {
-        this._id = userDocument.getObjectId(USER_ID);
-        this.password = userDocument.getString(USER_PASSWORD);
-        this.address = new DBAddress((Document) userDocument.get(USER_ADDRESS));
-        this.email = userDocument.getString(USER_EMAIL);
-        this.name = userDocument.getString(USER_NAME);
-        this.phoneNumber = userDocument.getString(USER_PHONE_NUMBER);
-        this.picture = userDocument.getString(USER_PICTURE);
-        this.rating = userDocument.getDouble(USER_RATING);
-    }
-
-    public DBUser(ObjectId _id, String password, DBAddress address, String email, String name, String phoneNumber, String picture, Double rating) {
+//    public DBUser(Document userDocument) {
+//        this._id = userDocument.getObjectId(USER_ID);
+//        this.password = userDocument.getString(USER_PASSWORD);
+//        this.address = new DBAddress((Document) userDocument.get(USER_ADDRESS));
+//        this.email = userDocument.getString(USER_EMAIL);
+//        this.name = userDocument.getString(USER_NAME);
+//        this.phoneNumber = userDocument.getString(USER_PHONE_NUMBER);
+//        this.picture = userDocument.getString(USER_PICTURE);
+//        this.rating = userDocument.getDouble(USER_RATING);
+//    }
+//
+    public DBUser(Long _id, String password, DBAddress address, String email, String name, String phoneNumber, String picture, Double rating) {
         this._id = _id;
         this.password = password;
         this.address = address;
@@ -63,23 +63,23 @@ Rating: 4.5   (Double)
         this.picture = picture;
         this.rating = rating;
     }
-
-    public Document getDocument() {
-
-        Document result = new Document();
-        result.put(USER_ID, this._id);
-        result.put(USER_PASSWORD, this.password);
-        result.put(USER_ADDRESS, address.getDocument());
-        result.put(USER_EMAIL, this.email);
-        result.put(USER_NAME, this.name);
-        result.put(USER_PHONE_NUMBER, this.phoneNumber);
-        result.put(USER_PICTURE, this.picture);
-        result.put(USER_RATING, this.rating);
-
-        return result;
-    }
-
-    public ObjectId get_id() {
+//
+//    public Document getDocument() {
+//
+//        Document result = new Document();
+//        result.put(USER_ID, this._id);
+//        result.put(USER_PASSWORD, this.password);
+//        result.put(USER_ADDRESS, address.getDocument());
+//        result.put(USER_EMAIL, this.email);
+//        result.put(USER_NAME, this.name);
+//        result.put(USER_PHONE_NUMBER, this.phoneNumber);
+//        result.put(USER_PICTURE, this.picture);
+//        result.put(USER_RATING, this.rating);
+//
+//        return result;
+//    }
+//
+    public Long get_id() {
         return _id;
     }
 

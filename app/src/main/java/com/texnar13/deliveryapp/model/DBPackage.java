@@ -1,13 +1,5 @@
 package com.texnar13.deliveryapp.model;
 
-import org.bson.Document;
-import org.bson.types.ObjectId;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 public class DBPackage {
     public static final String TABLE_NAME = "Pckage";
 
@@ -40,22 +32,22 @@ public class DBPackage {
 }
  */
 
-    public DBPackage(Document notificationDocument) {
-        this.category = notificationDocument.getString(PACKAGE_CATEGORY);
-        this.description = notificationDocument.getString(PACKAGE_DESCRIPTION);
-        this.weight = notificationDocument.getDouble(PACKAGE_WEIGHT);
-        this.name = notificationDocument.getString(PACKAGE_NAME);
-        this.picture = notificationDocument.getString(PACKAGE_PICTURE);
-
-
-        // и массив размеров Dimension
-        List<Double> dimensionDocs = notificationDocument.getList(PACKAGE_DIMENSIONS_ARRAY, Double.class);
-        this.dimensions = new double[dimensionDocs.size()];
-        for (int i = 0; i < dimensionDocs.size(); i++) {
-            this.dimensions[i] = dimensionDocs.get(i);
-        }
-    }
-
+//    public DBPackage(Document notificationDocument) {
+//        this.category = notificationDocument.getString(PACKAGE_CATEGORY);
+//        this.description = notificationDocument.getString(PACKAGE_DESCRIPTION);
+//        this.weight = notificationDocument.getDouble(PACKAGE_WEIGHT);
+//        this.name = notificationDocument.getString(PACKAGE_NAME);
+//        this.picture = notificationDocument.getString(PACKAGE_PICTURE);
+//
+//
+//        // и массив размеров Dimension
+//        List<Double> dimensionDocs = notificationDocument.getList(PACKAGE_DIMENSIONS_ARRAY, Double.class);
+//        this.dimensions = new double[dimensionDocs.size()];
+//        for (int i = 0; i < dimensionDocs.size(); i++) {
+//            this.dimensions[i] = dimensionDocs.get(i);
+//        }
+//    }
+//
     public DBPackage(String category, String description, double[] dimensions, double weight, String name, String picture) {
         this.category = category;
         this.description = description;
@@ -64,21 +56,21 @@ public class DBPackage {
         this.name = name;
         this.picture = picture;
     }
-
-    public Document toDocument() {
-        return new Document()
-                .append(PACKAGE_CATEGORY, category)
-                .append(PACKAGE_DESCRIPTION, description)
-                .append(PACKAGE_DIMENSIONS_ARRAY, Arrays.asList(
-                        new Document("$numberDouble", ""+dimensions[0]),
-                        new Document("$numberDouble", ""+dimensions[1]),
-                        new Document("$numberDouble", ""+dimensions[2])
-                ))
-                .append(PACKAGE_WEIGHT, weight)
-                .append(PACKAGE_NAME, name)
-                .append(PACKAGE_PICTURE, picture);
-    }
-
+//
+//    public Document toDocument() {
+//        return new Document()
+//                .append(PACKAGE_CATEGORY, category)
+//                .append(PACKAGE_DESCRIPTION, description)
+//                .append(PACKAGE_DIMENSIONS_ARRAY, Arrays.asList(
+//                        new Document("$numberDouble", ""+dimensions[0]),
+//                        new Document("$numberDouble", ""+dimensions[1]),
+//                        new Document("$numberDouble", ""+dimensions[2])
+//                ))
+//                .append(PACKAGE_WEIGHT, weight)
+//                .append(PACKAGE_NAME, name)
+//                .append(PACKAGE_PICTURE, picture);
+//    }
+//
     public String getCategory() {
         return category;
     }

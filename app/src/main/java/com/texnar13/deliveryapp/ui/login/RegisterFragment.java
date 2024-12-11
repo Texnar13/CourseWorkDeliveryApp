@@ -1,22 +1,15 @@
-package com.texnar13.deliveryapp.ui;
+package com.texnar13.deliveryapp.ui.login;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.textfield.TextInputLayout;
-import com.texnar13.deliveryapp.MainViewModel;
-import com.texnar13.deliveryapp.MainViewModelFactory;
 import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.DBUser;
-
-import java.util.Objects;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 public class RegisterFragment extends Fragment {
 
@@ -110,8 +103,7 @@ public class RegisterFragment extends Fragment {
 
 
                 // отправляем во вьюмодель
-                MainViewModel viewModel = (new ViewModelProvider(this,
-                        new MainViewModelFactory(requireActivity()))).get(MainViewModel.class);
+                MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
                 viewModel.tryRegisterUser(
 
                         passwordField.getEditText().getText().toString().trim(),

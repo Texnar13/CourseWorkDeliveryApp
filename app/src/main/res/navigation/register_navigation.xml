@@ -8,7 +8,7 @@
     <!-- Регистрация -->
     <fragment
         android:id="@+id/loginFragment"
-        android:name="com.texnar13.deliveryapp.ui.LoginFragment"
+        android:name="com.texnar13.deliveryapp.ui.login.LoginFragment"
         android:label="fragment_login"
         tools:layout="@layout/fragment_login">
         <action
@@ -24,7 +24,7 @@
     </fragment>
     <fragment
         android:id="@+id/registerFragment"
-        android:name="com.texnar13.deliveryapp.ui.RegisterFragment"
+        android:name="com.texnar13.deliveryapp.ui.login.RegisterFragment"
         android:label="fragment_register"
         tools:layout="@layout/fragment_register">
 
@@ -64,7 +64,7 @@
 
     <fragment
         android:id="@+id/fragment_expeditions"
-        android:name="com.texnar13.deliveryapp.ui.ExpeditionsFragment"
+        android:name="com.texnar13.deliveryapp.ui.expeditions.ExpeditionsFragment"
         android:label="fragment_expeditions"
         tools:layout="@layout/fragment_expeditions" />
 </navigation>

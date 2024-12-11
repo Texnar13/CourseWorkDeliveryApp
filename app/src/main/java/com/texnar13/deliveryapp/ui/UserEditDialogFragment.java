@@ -18,6 +18,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.texnar13.deliveryapp.R;
 import com.texnar13.deliveryapp.model.DBAddress;
 import com.texnar13.deliveryapp.model.DBUser;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 import java.util.Objects;
 
@@ -50,9 +51,11 @@ public class UserEditDialogFragment extends DialogFragment {
         super.onCreate(savedInstanceState);
 
         // данные для диалога
-        Bundle arguments = requireArguments();
+        //Bundle arguments = requireArguments();
+
+        MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
         // получаем пользователя
-        DBUser user = (DBUser) Objects.requireNonNull(arguments.get(ARG_USER));
+        DBUser user = viewModel.getCurrentUser().getValue();
 
 
         // начинаем строить диалог
@@ -139,7 +142,7 @@ public class UserEditDialogFragment extends DialogFragment {
 
             if (isCorrect) {
                 // отправка изменённых значений в бд
-                ((MainActivityInterface) Objects.requireNonNull(getActivity())).editUser(new DBUser(
+                MainViewModel.Companion.getViewModel(requireActivity()).editUser(new DBUser(
                         user.get_id(),
                         user.getPassword(),
                         new DBAddress(

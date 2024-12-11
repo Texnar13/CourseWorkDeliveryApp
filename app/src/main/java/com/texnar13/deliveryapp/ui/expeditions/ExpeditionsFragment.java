@@ -1,6 +1,5 @@
-package com.texnar13.deliveryapp.ui;
+package com.texnar13.deliveryapp.ui.expeditions;
 
-import android.graphics.Color;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -11,14 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.texnar13.deliveryapp.MainViewModel;
 import com.texnar13.deliveryapp.R;
 import com.texnar13.deliveryapp.model.DBExpedition;
+import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionEditDialogFragment;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 import java.util.Locale;
-import java.util.Objects;
 
 public class ExpeditionsFragment extends Fragment {
 
@@ -63,7 +61,7 @@ public class ExpeditionsFragment extends Fragment {
 
 // -------------------------------- подписываемся на изменения во viewModel --------------------------------
 
-        mainViewModel.currentUserExpeditions.observe(this, dbExpeditions -> {
+        mainViewModel.getCurrentUserExpeditions().observe(getViewLifecycleOwner(), dbExpeditions -> {
 
             // вывод списка
             boxesContainer.removeAllViews();

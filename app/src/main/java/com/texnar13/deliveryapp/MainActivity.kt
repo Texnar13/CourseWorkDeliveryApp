@@ -1,39 +1,40 @@
-package com.texnar13.deliveryapp;
+package com.texnar13.deliveryapp
 
-import android.content.pm.ActivityInfo;
-import android.os.Bundle;
-import android.os.Debug;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
+import android.annotation.SuppressLint
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.MotionEvent
+import android.view.View
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.NavDestination
+import androidx.navigation.Navigation.findNavController
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.NavigationUI.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.texnar13.deliveryapp.model.DBUser
+import com.texnar13.deliveryapp.ui.login.LoginFragmentInterface
+import com.texnar13.deliveryapp.view_model.MainViewModel
+import com.texnar13.deliveryapp.view_model.MainViewModelFactory
+import java.util.Objects
 
-import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
-import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.NavigationUI;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.texnar13.deliveryapp.model.DBUser;
-import com.texnar13.deliveryapp.ui.UserEditDialogFragment;
-import com.texnar13.deliveryapp.ui.LoginFragmentInterface;
-import com.texnar13.deliveryapp.ui.MainActivityInterface;
-
-import java.util.Objects;
-
-
-public class MainActivity extends AppCompatActivity implements MainActivityInterface {
-
+class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
     // ссылки на контроллер с фрагментами
-    NavController navController;
-    FragmentManager navFragmentManager;
+    private var navController: NavController? = null
+    private var navFragmentManager: FragmentManager? = null
 
     // все варианты фрагментов
-    private enum FState {
+    enum class FState {
         LOGIN_FRAGMENT,
         REGISTER_FRAGMENT,
         USER_FRAGMENT,
@@ -42,286 +43,196 @@ public class MainActivity extends AppCompatActivity implements MainActivityInter
     }
 
     // пременная для отслеживания текущего фрагмента
-    FState currentState = FState.LOGIN_FRAGMENT;
+    var currentState: FState = FState.LOGIN_FRAGMENT
 
 
+    // TODO УБРАТЬ ВО FRAGMENT
     // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
-    View loadScreenBlocking;
-    boolean isNowOutedLoadScreen;
+    private var loadScreenBlocking: View? = null
+    private var isNowOutedLoadScreen: Boolean = false
 
     // нижнее меню навигации
-    BottomNavigationView bottomNavigationView;
+    private var bottomNavigationView: BottomNavigationView? = null
 
-
-    // viewModel в которой содержится вся бизнеслогика
-    MainViewModel viewModel;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    @SuppressLint("SourceLockedOrientationActivity", "ClickableViewAccessibility")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
         // мне лень ваять интерфейс :)
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
 
-        //Get VM Heap Size by calling:
-        Log.e("Test", "totalMemory = " + Runtime.getRuntime().totalMemory());
-        //Get Allocated VM Memory by calling:
-
-        Log.e("Test", "totalMemory - freeMemory= " +
-                (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));
-        //Get VM Heap Size Limit by calling:
-
-        Log.e("Test", "maxMemory= " +
-                Runtime.getRuntime().maxMemory());
-        //Get Native Allocated Memory by calling:
-
-        Log.e("Test", "getNativeHeapAllocatedSize= " +
-                Debug.getNativeHeapAllocatedSize());
+        // Получаем ViewModel
+        val viewModel = MainViewModel.getViewModel(this)
 
 
-        // ------------------------ Подписка на ViewModel --------------------------------
 
-
-        viewModel = (new ViewModelProvider(this,
-                new MainViewModelFactory(this))).get(MainViewModel.class);
-        //getDefaultViewModelProviderFactory().create(MainViewModel.class);
-
-
-        // отслеживаем состояние подключения
-        viewModel.activityConnectionStatus.observe(this, connectionStatusValue -> {
-            switch (connectionStatusValue) {
-                case STATUS_NONE:
-                    enableLoadBar();
-                    //Toast.makeText(this, "Никогде",Toast.LENGTH_SHORT).show();
-                    break;
-                case STATUS_ERROR:
-                    Toast.makeText(this, "Ошибка подключения, включите VPN. Повторная попытка...", Toast.LENGTH_SHORT).show();
-                    break;
-                case STATUS_CONNECTED:
-
-                    // уведомляем фрагмент что загрузка завершена
-                    if (currentState == FState.LOGIN_FRAGMENT) {
-                        // текущий фрагмент (всегда первый в списке)
-                        LoginFragmentInterface loginFragmentInterface =
-                                (LoginFragmentInterface) navFragmentManager.getFragments().get(0);
-                        //.findFragmentById(R.id.fragment_main);
-                        loginFragmentInterface.loadOver();
-                    }
-                    disableLoadBar();
-
-                    Toast.makeText(this, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        });
-
+        // TODO УБРАТЬ ВО FRAGMENT ПОСТЕПЕННО
         // отслеживаем авторизацию и состояние текущего пользователя
-        viewModel.currentUser.observe(this, user -> {
-
-            // это должно срабатывать, когда мы меняем пользователя целиком,
-            //  то есть его ссылку, а не данные в нем
+        viewModel.currentUser.observe(this) { user: DBUser? ->
 
             // если пользователь получен из базы
             if (user != null) {
                 // переход на страницу пользователя
                 if (currentState == FState.LOGIN_FRAGMENT) {
-                    navController.navigate(R.id.action_loginFragment_to_userFragment);
+                    //navController!!.navigate<Any>(R.id.action_loginFragment_to_userFragment)// TODO ОК
                 } else if (currentState == FState.REGISTER_FRAGMENT) {
                     // переход на главную страницу
-                    navController.navigate(R.id.action_registerFragment_to_mainFragment);
+                    navController!!.navigate<Any>(R.id.action_registerFragment_to_mainFragment)
                 }
             } else {
-                // переход на страницу регистрации через backstack
-                myBackCallback.setEnabled(false);
-                getOnBackPressedDispatcher().onBackPressed();
-                myBackCallback.setEnabled(true);
+//                // переход на страницу входа через backstack
+//                myBackCallback.isEnabled = false
+//                onBackPressedDispatcher.onBackPressed()
+//                myBackCallback.isEnabled = true
             }
-        });
+        }
 
 
         // тосты
-        viewModel.toastMessage.observe(this, s ->
-                Toast.makeText(this, s, Toast.LENGTH_SHORT).show());
-
-
-//        // открытие активности а не перерисовка
-//        if (savedInstanceState == null) {
-//        }
-
+        viewModel.toastMessage.observe(this) { s: String? -> Toast.makeText(this, s, Toast.LENGTH_SHORT).show() }
 
         // ------------------------ Фрагменты и View --------------------------------
 
         // контроллер в котором пропсана навигация между фрагментами
-        navController = Navigation.findNavController(this, R.id.activity_main_nav_host_fragment);
+        navController =
+                (supportFragmentManager.findFragmentById(R.id.activity_main_nav_host_fragment) as NavHostFragment).navController
+
+
+        //findNavController(this, R.id.activity_main_nav_host_fragment)
         // нижнее меню навигации
-        bottomNavigationView = findViewById(R.id.activity_main_bottom_navigation);
+        bottomNavigationView = findViewById(R.id.activity_main_bottom_navigation)
         // отслеживаем какой сейчас фрагмент
-        navController.addOnDestinationChangedListener((navController, navDestination, bundle) -> {
-            if (navDestination.getId() == R.id.loginFragment) {
-                currentState = FState.LOGIN_FRAGMENT;
-                hideBottomNavigation();
-            } else if (navDestination.getId() == R.id.registerFragment) {
-                currentState = FState.REGISTER_FRAGMENT;
-                hideBottomNavigation();
-            } else if (navDestination.getId() == R.id.fragment_user) {
-                currentState = FState.USER_FRAGMENT;
-                showBottomNavigation();
-            } else if (navDestination.getId() == R.id.fragment_trajectories) {
-                currentState = FState.TRAJECTORIES_FRAGMENT;
-                showBottomNavigation();
-            } else if (navDestination.getId() == R.id.fragment_expeditions) {
-                currentState = FState.EXPEDITIONS_FRAGMENT;
-                showBottomNavigation();
+        navController!!.addOnDestinationChangedListener { _, navDestination, _ ->
+            when (navDestination.id) {
+                R.id.loginFragment -> {
+                    currentState = FState.LOGIN_FRAGMENT
+                    // TODO ВЫЗОВ ИЗ FRAGMENT
+                    hideBottomNavigation()
+                }
+
+                R.id.registerFragment -> {
+                    currentState = FState.REGISTER_FRAGMENT
+                    // TODO ВЫЗОВ ИЗ FRAGMENT
+                    hideBottomNavigation()
+                }
+
+                R.id.fragment_user -> {
+                    currentState = FState.USER_FRAGMENT
+                    // TODO ВЫЗОВ ИЗ FRAGMENT
+                    showBottomNavigation()
+                }
+
+                R.id.fragment_trajectories -> {
+                    currentState = FState.TRAJECTORIES_FRAGMENT
+                    // TODO ВЫЗОВ ИЗ FRAGMENT
+                    showBottomNavigation()
+                }
+
+                R.id.fragment_expeditions -> {
+                    currentState = FState.EXPEDITIONS_FRAGMENT
+                    // TODO ВЫЗОВ ИЗ FRAGMENT
+                    showBottomNavigation()
+                }
             }
-            Log.d("Hello", "currentState = " + currentState.name());
-        });
+            Log.d("Hello", "currentState = " + currentState.name)
+        }
         // связываем меню навигации и контроллер (он будет работать по id пунктов меню)
-        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+        setupWithNavController(bottomNavigationView!!, navController!!)
 
         // Менеджер фрагментов, нужен для получения ссылки на текщий фрагмент (чтобы отправлять ему данные)
-        navFragmentManager = Objects.requireNonNull(getSupportFragmentManager()
-                        .findFragmentById(R.id.activity_main_nav_host_fragment))
-                .getChildFragmentManager();
+        navFragmentManager = Objects.requireNonNull(supportFragmentManager
+                .findFragmentById(R.id.activity_main_nav_host_fragment))!!.childFragmentManager
 
         // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
-        loadScreenBlocking = findViewById(R.id.activity_main_load_block);
-        loadScreenBlocking.setOnTouchListener((view, motionEvent) -> true);
-        loadScreenBlocking.setVisibility((isNowOutedLoadScreen) ? (View.VISIBLE) : (View.INVISIBLE));
+        loadScreenBlocking = findViewById(R.id.activity_main_load_block)
+        loadScreenBlocking!!.setOnTouchListener { _: View?, _: MotionEvent? -> true }
+        loadScreenBlocking!!.visibility = if ((isNowOutedLoadScreen)) (View.VISIBLE) else (View.INVISIBLE)
 
         // добавление слушателя кнопке назад (В качестве владельца слушателя текущая активити)
-        getOnBackPressedDispatcher().addCallback(this, myBackCallback);
-
+        onBackPressedDispatcher.addCallback(this, myBackCallback)
     }
 
+
+    // TODO УБРАТЬ В NAVIGATION?
     // Обработка нажатия кнопки назад
-    OnBackPressedCallback myBackCallback = new OnBackPressedCallback(true) {
-        @Override
-        public void handleOnBackPressed() {
+    private var myBackCallback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
             // В зависимости от того на каком мы сейчас фрагменте
-            switch (currentState) {
-                case LOGIN_FRAGMENT:
-                case REGISTER_FRAGMENT:
+            when (currentState) {
+                FState.LOGIN_FRAGMENT, FState.REGISTER_FRAGMENT -> {
                     // В остальных случаях работает обычный Callback
                     // а этот Callback мы отключаем
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
-                    setEnabled(true);
-                    break;
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
 
-                case USER_FRAGMENT:
-                case TRAJECTORIES_FRAGMENT:
-                case EXPEDITIONS_FRAGMENT:
-                    // Описание точек выхода из приложения
+                FState.USER_FRAGMENT, FState.TRAJECTORIES_FRAGMENT, FState.EXPEDITIONS_FRAGMENT -> // Описание точек выхода из приложения
                     // выход с главного интерфейса это просто выход из приложения
-                    finish();
+                    finish()
             }
         }
-    };
+    }
 
 
-// ----------------------------------------- View элементы -----------------------------------------
+    // ----------------------------------------- View элементы -----------------------------------------
 
-
-    void enableLoadBar() {
-        isNowOutedLoadScreen = true;
+    override fun enableLoadBar() {
+        isNowOutedLoadScreen = true
 
         // отключение элементов интерфейса и включение progress bar загрузки
         if (loadScreenBlocking != null) {
-            loadScreenBlocking.setVisibility(View.VISIBLE);
+            loadScreenBlocking!!.visibility = View.VISIBLE
         }
         // отключение меню навигации
-        if (bottomNavigationView != null)
-            for (int i = 0; i < 3; i++)
-                bottomNavigationView.getMenu().getItem(i).setEnabled(false);
+        if (bottomNavigationView != null) for (i in 0..2) bottomNavigationView!!.menu.getItem(i).setEnabled(false)
     }
 
-    void disableLoadBar() {
-        isNowOutedLoadScreen = false;
+    override fun disableLoadBar() {
+        isNowOutedLoadScreen = false
 
         // включение элементов интерфейса и скрытие progress bar загрузки
         if (loadScreenBlocking != null) {
-            loadScreenBlocking.setVisibility(View.INVISIBLE);
+            loadScreenBlocking!!.visibility = View.INVISIBLE
         }
         // включение меню навигации
-        if (bottomNavigationView != null)
-            for (int i = 0; i < 3; i++)
-                bottomNavigationView.getMenu().getItem(i).setEnabled(true);
+        if (bottomNavigationView != null) for (i in 0..2) bottomNavigationView!!.menu.getItem(i).setEnabled(true)
     }
 
-    void showBottomNavigation() {
+    override fun showBottomNavigation() {
         // показываем нижнюю панель навигации
-        bottomNavigationView.setVisibility(View.VISIBLE);
+        bottomNavigationView!!.visibility = View.VISIBLE
 
         // перепривязываем низ базового фрагмента к низу bottomNavigationView
-        ConstraintLayout constraintLayout = findViewById(R.id.main_container);
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(constraintLayout);
+        val constraintLayout = findViewById<ConstraintLayout>(R.id.main_container)
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(constraintLayout)
         constraintSet.connect(R.id.activity_main_nav_host_fragment, ConstraintSet.BOTTOM,
-                bottomNavigationView.getId(), ConstraintSet.TOP, 0);
-        constraintSet.applyTo(constraintLayout);
+                bottomNavigationView!!.id, ConstraintSet.TOP, 0)
+        constraintSet.applyTo(constraintLayout)
     }
 
-    void hideBottomNavigation() {
+    override fun hideBottomNavigation() {
         // скрываем нижнюю панель навигации
-        bottomNavigationView.setVisibility(View.INVISIBLE);
+        bottomNavigationView!!.visibility = View.INVISIBLE
         // перепривязываем низ базового фрагмента к низу экрана
-        ConstraintLayout constraintLayout = findViewById(R.id.main_container);
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(constraintLayout);
+        val constraintLayout = findViewById<ConstraintLayout>(R.id.main_container)
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(constraintLayout)
         constraintSet.connect(R.id.activity_main_nav_host_fragment, ConstraintSet.BOTTOM,
-                ConstraintLayout.LayoutParams.PARENT_ID, ConstraintSet.BOTTOM, 0);
-        constraintSet.applyTo(constraintLayout);
-
+                ConstraintLayout.LayoutParams.PARENT_ID, ConstraintSet.BOTTOM, 0)
+        constraintSet.applyTo(constraintLayout)
     }
 
+}
 
-// =================================================================================================
-// ====================================== Вызовы от фрагментов =====================================
-// =================================================================================================
+interface LoaderAndBottomPanel {
 
-
-// ----------------------------------------- login fragment ----------------------------------------
-
-// --------------------------------------- Register fragment ---------------------------------------
-
-    @Override
-    public void registerUser(String password, String[] address, String email, String name, String phone) {
-
-    }
-
-
-// --------------------------------------- User fragment ---------------------------------------
-
-    @Override
-    public void logout() {
-
-        // удаление обьекта пользователя во вьюмодели
-        viewModel.logout();
-
-//        // вызов выхода из активности с экраном загрузки
-//        enableLoadBar();
-//        (new Handler(Looper.getMainLooper())).postDelayed(() -> {
-//
-//            // выключение экрана загрузки
-//            disableLoadBar();
-//
-//            // переход на страницу регистрации
-//            // тут единственное место где при нажатии кнопки назад пользователь не выходит из приложения
-//            myBackCallback.setEnabled(false);
-//            getOnBackPressedDispatcher().onBackPressed();
-//            myBackCallback.setEnabled(true);
-//
-//        }, 1000);
-
-    }
-
-
-// --------------------------------------- User edit dialog ---------------------------------------
-
-    @Override
-    public void editUser(DBUser editedUser) {
-        viewModel.editUser(editedUser);
-    }
+    fun enableLoadBar()
+    fun disableLoadBar()
+    fun showBottomNavigation()
+    fun hideBottomNavigation()
 
 }
 

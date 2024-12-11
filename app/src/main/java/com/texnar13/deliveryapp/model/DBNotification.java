@@ -1,8 +1,5 @@
 package com.texnar13.deliveryapp.model;
 
-import org.bson.Document;
-import org.bson.types.ObjectId;
-
 import java.util.Date;
 
 public class DBNotification {
@@ -23,8 +20,8 @@ public class DBNotification {
     public static final String NOTIFICATION_STATUS_UNREAD = "Unread";
     public static final String NOTIFICATION_STATUS_BEEN_READ = "BeenRead";
 
-    private ObjectId _id;
-    private ObjectId userId;
+    private Long _id;
+    private Long userId;
     private Date date;
     private String notificationMessage;
     private String notificationType;
@@ -39,37 +36,37 @@ public class DBNotification {
     Status "Unread"
 */
 
-    public DBNotification(Document notificationDocument){
-        this._id = notificationDocument.getObjectId(NOTIFICATION_ID);
-        this.userId = notificationDocument.getObjectId(NOTIFICATION_USER);
-        this.date = notificationDocument.getDate(NOTIFICATION_DATE_TIME);
-        this.notificationMessage = notificationDocument.getString(NOTIFICATION_MESSAGE);
-        this.notificationType = notificationDocument.getString(NOTIFICATION_TYPE);
-        this.notificationStatus = notificationDocument.getString(NOTIFICATION_STATUS);
-    }
-
-
-    public ObjectId get_id() {
-        return _id;
-    }
-
-    public ObjectId getUserId() {
-        return userId;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public String getNotificationMessage() {
-        return notificationMessage;
-    }
-
-    public String getNotificationType() {
-        return notificationType;
-    }
-
-    public String getNotificationStatus() {
-        return notificationStatus;
-    }
+//    public DBNotification(Document notificationDocument){
+//        this._id = notificationDocument.getObjectId(NOTIFICATION_ID);
+//        this.userId = notificationDocument.getObjectId(NOTIFICATION_USER);
+//        this.date = notificationDocument.getDate(NOTIFICATION_DATE_TIME);
+//        this.notificationMessage = notificationDocument.getString(NOTIFICATION_MESSAGE);
+//        this.notificationType = notificationDocument.getString(NOTIFICATION_TYPE);
+//        this.notificationStatus = notificationDocument.getString(NOTIFICATION_STATUS);
+//    }
+//
+//
+//    public ObjectId get_id() {
+//        return _id;
+//    }
+//
+//    public ObjectId getUserId() {
+//        return userId;
+//    }
+//
+//    public Date getDate() {
+//        return date;
+//    }
+//
+//    public String getNotificationMessage() {
+//        return notificationMessage;
+//    }
+//
+//    public String getNotificationType() {
+//        return notificationType;
+//    }
+//
+//    public String getNotificationStatus() {
+//        return notificationStatus;
+//    }
 }
