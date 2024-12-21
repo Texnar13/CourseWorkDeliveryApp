@@ -6,9 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.navigation.Navigation;
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.texnar13.deliveryapp.R;
+import com.texnar13.deliveryapp.model.entities.EntityUser;
 import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 public class RegisterFragment extends Fragment {
@@ -34,6 +37,24 @@ public class RegisterFragment extends Fragment {
         TextInputLayout nameField = rootView.findViewById(R.id.fragment_register_input_name);
         TextInputLayout phoneField = rootView.findViewById(R.id.fragment_register_input_phone);
         TextInputLayout addressField = rootView.findViewById(R.id.fragment_register_input_address);
+
+
+        // получаем вьюмодель
+        MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
+
+
+        // отслеживаем авторизацию и состояние текущего пользователя
+        viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+            // если пользователь получен из базы
+            if (user != null) {
+                // переход на страницу пользователя
+                Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).navigate(
+                        R.id.action_registerFragment_to_mainFragment
+                );
+            }
+        });
+
+
 
 
         // нажатие кнопки регистрация
@@ -103,12 +124,10 @@ public class RegisterFragment extends Fragment {
 
 
                 // отправляем во вьюмодель
-                MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
                 viewModel.tryRegisterUser(
-
+                        emailField.getEditText().getText().toString().trim(),
                         passwordField.getEditText().getText().toString().trim(),
                         addressesArray,
-                        emailField.getEditText().getText().toString().trim(),
                         nameField.getEditText().getText().toString().trim(),
                         "+" + phoneField.getEditText().getText().toString().trim()
                 );

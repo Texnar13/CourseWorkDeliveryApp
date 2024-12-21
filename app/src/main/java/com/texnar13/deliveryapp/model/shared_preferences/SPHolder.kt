@@ -1,0 +1,40 @@
+package com.texnar13.deliveryapp.model.shared_preferences
+
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
+
+
+class SPHolder(
+        private val context: Context
+) {
+
+    companion object {
+        private const val PREFS_NAME = "DELIVERY_PREFS"
+
+        // Аутентификация
+        private const val AUTH_LOGIN = "AUTH_LOGIN"
+        private const val AUTH_PASSWORD = "AUTH_PASSWORD"
+    }
+
+    private val preferences: SharedPreferences =
+            context.getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+
+// ------------------------------------ Аутентификация ------------------------------------
+
+    fun setUserLastAuth(login: String, pass: String) {
+        val editor = preferences.edit()
+        editor.putString(AUTH_LOGIN, login)
+        editor.putString(AUTH_PASSWORD, pass)
+        editor.apply()
+    }
+
+    fun getUserLastAuth(): Array<String> {
+        return arrayOf(
+                preferences.getString(AUTH_LOGIN, "hello_world@mail.com")!!,
+                preferences.getString(AUTH_PASSWORD, "12345678")!!
+        )
+    }
+
+
+}

@@ -18,6 +18,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.texnar13.deliveryapp.R;
 import com.texnar13.deliveryapp.model.DBAddress;
 import com.texnar13.deliveryapp.model.DBUser;
+import com.texnar13.deliveryapp.model.entities.EntityUser;
 import com.texnar13.deliveryapp.view_model.MainViewModel;
 
 import java.util.Objects;
@@ -37,7 +38,7 @@ public class UserEditDialogFragment extends DialogFragment {
     }
 
     //Use this factory method
-    public static UserEditDialogFragment newInstance(DBUser user) {
+    public static UserEditDialogFragment newInstance(EntityUser user) {
         UserEditDialogFragment fragment = new UserEditDialogFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_USER, user);
@@ -55,7 +56,7 @@ public class UserEditDialogFragment extends DialogFragment {
 
         MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
         // получаем пользователя
-        DBUser user = viewModel.getCurrentUser().getValue();
+        EntityUser user = viewModel.getCurrentUser().getValue();
 
 
         // начинаем строить диалог
@@ -67,7 +68,7 @@ public class UserEditDialogFragment extends DialogFragment {
 
         // вывод данных в поля погулять
         TextView userIdText = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_id);
-        userIdText.setText("id=" + user.get_id().toString());
+        userIdText.setText("id=" + user.getId());
         TextInputLayout inputMail = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_mail);
         inputMail.getEditText().setText(user.getEmail());
         TextInputLayout inputName = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_name);
@@ -142,8 +143,8 @@ public class UserEditDialogFragment extends DialogFragment {
 
             if (isCorrect) {
                 // отправка изменённых значений в бд
-                MainViewModel.Companion.getViewModel(requireActivity()).editUser(new DBUser(
-                        user.get_id(),
+                MainViewModel.Companion.getViewModel(requireActivity()).editUser(new EntityUser(
+                        user.getId(),
                         user.getPassword(),
                         new DBAddress(
                         new String[]{
@@ -155,7 +156,6 @@ public class UserEditDialogFragment extends DialogFragment {
                         inputMail.getEditText().getText().toString(),
                         inputName.getEditText().getText().toString(),
                         "+" + inputPhone.getEditText().getText().toString(),
-                        user.getPicture(),
                         user.getRating()
                 ));
 

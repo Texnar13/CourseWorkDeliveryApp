@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.texnar13.deliveryapp.R;
+import com.texnar13.deliveryapp.model.http.HttpApi;
+import com.texnar13.deliveryapp.model.shared_preferences.SPHolder;
 
 
 // фабрика создания MainViewModel
@@ -27,9 +29,12 @@ public class MainViewModelFactory implements ViewModelProvider.Factory {
         //Realm.init(context);
 
         // получение строки с апи ключом
-        String apiKey = context.getResources().getString(R.string.mongodb_api_key);
+        //String apiKey = context.getResources().getString(R.string.mongodb_api_key);
 
-        return (T) (new MainViewModel(apiKey));
+        return (T) (new MainViewModel(
+                new HttpApi(),
+                new SPHolder(context)
+                ));
         //return ViewModelProvider.Factory.super.create(modelClass);
     }
 }

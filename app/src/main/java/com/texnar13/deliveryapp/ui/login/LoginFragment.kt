@@ -14,6 +14,11 @@ import com.texnar13.deliveryapp.R
 import com.texnar13.deliveryapp.model.DBUser
 import com.texnar13.deliveryapp.view_model.MainViewModel
 import com.texnar13.deliveryapp.view_model.MainViewModel.Companion.getViewModel
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import org.json.JSONObject
+import java.io.IOException
+
 
 class LoginFragment : Fragment() {
 
@@ -43,42 +48,43 @@ class LoginFragment : Fragment() {
 
 
         // отслеживаем состояние подключения
-        viewModel.activityConnectionStatus.observe(viewLifecycleOwner) { status ->
-            when (status) {
-                MainViewModel.ConnectionStatusValue.STATUS_NONE -> {
+//        viewModel.activityConnectionStatus.observe(viewLifecycleOwner) { status ->
+//            when (status) {
+//                MainViewModel.ConnectionStatusValue.STATUS_NONE -> {
+//
+//                    // Включаем отображение загрузки
+//                    (requireActivity() as LoaderAndBottomPanel).enableLoadBar()
+//                    internetConnected = false
+//                }
+//
+//                MainViewModel.ConnectionStatusValue.STATUS_ERROR -> {
+//                    Toast.makeText(
+//                            context,
+//                            "Нет соединения с сервером...",
+//                            Toast.LENGTH_SHORT
+//                    ).show()
+//
+//                    internetConnected = false
+//                }
+//
+//                MainViewModel.ConnectionStatusValue.STATUS_CONNECTED -> {
+//        Log.e("Hello", "loaded")
 
-                    // Включаем отображение загрузки
-                    (requireActivity() as LoaderAndBottomPanel).enableLoadBar()
-                    internetConnected = false
-                }
+        internetConnected = true
+        loginContainer.visibility = View.VISIBLE
+        registerButton.visibility = View.VISIBLE
 
-                MainViewModel.ConnectionStatusValue.STATUS_ERROR -> {
-                    Toast.makeText(
-                            context,
-                            "Нет соединения с сервером...",
-                            Toast.LENGTH_SHORT
-                    ).show()
+//        (requireActivity() as LoaderAndBottomPanel).disableLoadBar()
 
-                    internetConnected = false
-                }
-
-                MainViewModel.ConnectionStatusValue.STATUS_CONNECTED -> {
-                    Log.e("Hello", "loaded")
-                    internetConnected = true
-                    loginContainer.visibility = View.VISIBLE
-                    registerButton.visibility = View.VISIBLE
-
-                    (requireActivity() as LoaderAndBottomPanel).disableLoadBar()
-
-                    Toast.makeText(context, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show()
-                }
-
-                null -> {}
-            }
-        }
+//        Toast.makeText(context, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show()
+//                }
+//
+//                null -> {}
+//            }
+//        }
 
         // отслеживаем текущего пользователя
-        viewModel.currentUser.observe(viewLifecycleOwner) { user: DBUser? ->
+        viewModel.currentUser.observe(viewLifecycleOwner) { user ->
             // если пользователь получен из базы
             if (user != null) {
                 // переход на страницу пользователя
@@ -91,10 +97,11 @@ class LoginFragment : Fragment() {
 
         // кнопка авторизации
         rootView.findViewById<View>(R.id.fragment_login_login_button).setOnClickListener {
+
+
             if (internetConnected) {
                 val email = rootView.findViewById<EditText>(R.id.fragment_login_login_edit_email)
                 val password = rootView.findViewById<EditText>(R.id.fragment_login_login_edit_password)
-
 
                 // отдаем данные аутентификации viewModel
                 viewModel.authUser(
@@ -116,6 +123,5 @@ class LoginFragment : Fragment() {
 
         return rootView
     }
-
 
 }

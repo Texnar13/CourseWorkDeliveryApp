@@ -1,117 +1,93 @@
-package com.texnar13.deliveryapp.ui;
+package com.texnar13.deliveryapp.ui
 
-import static androidx.navigation.Navigation.findNavController;
-
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.ui.login.LoginFragment;
-import com.texnar13.deliveryapp.view_model.MainViewModel;
-
-public class UserFragment extends Fragment {
-
-    // the fragment initialization parameters
-    private static final String ARG_PARAM1 = "param1";
-
-    private String mParam1;
-
-    // Required empty public constructor
-    public UserFragment() {
-    }
+import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.Navigation.findNavController
+import com.texnar13.deliveryapp.R
+import com.texnar13.deliveryapp.ui.login.LoginFragment
+import com.texnar13.deliveryapp.view_model.MainViewModel
+import java.util.Locale
 
 
-    // Фабрика
-    public static LoginFragment newInstance(String param1) {
-        LoginFragment fragment = new LoginFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        fragment.setArguments(args);
-        return fragment;
-    }
+class UserFragment : Fragment() {
+    private var mParam1: String? = null
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (arguments != null) {
+            mParam1 = requireArguments().getString(ARG_PARAM1)
         }
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_user, container, false);
+        val rootView = inflater.inflate(R.layout.fragment_user, container, false)
 
-        MainViewModel mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        val mainViewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
 
-// ------------------------------------------- разметка -------------------------------------------
-
-        Log.e("TAG", "onCreateView: user = " + mainViewModel.getCurrentUser().getValue());
+        // ------------------------------------------- разметка -------------------------------------------
+        Log.e("TAG", "onCreateView: user = " + mainViewModel.currentUser.value)
 
 
         // кнопка выхода из аккаунта
-        rootView.findViewById(R.id.fragment_user_logout_button).setOnClickListener(view -> {
-
-            mainViewModel.logout();
-
+        rootView.findViewById<View>(R.id.fragment_user_logout_button).setOnClickListener { view ->
+            mainViewModel.logout()
             // TODO НЕ РАБОТАЕТ СДЕЛАТЬ, работает при двойном нажатии
             // переход на страницу регистрации
             //requireActivity().getOnBackPressedDispatcher().onBackPressed();
-            findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).popBackStack();
-
-        });
+            findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).popBackStack()
+        }
 
         // кнопка редактирования информации о пользователе
-        rootView.findViewById(R.id.fragment_user_edit_user_button).setOnClickListener(view -> {
-            Log.e("TAG", "edit user: user = " + mainViewModel.getCurrentUser().getValue());
+        rootView.findViewById<View>(R.id.fragment_user_edit_user_button).setOnClickListener { view: View? ->
+            Log.e("TAG", "edit user: user = " + mainViewModel.currentUser.value)
             // вызов диалога
-            UserEditDialogFragment.newInstance(mainViewModel.getCurrentUser().getValue())
-                    .show(getParentFragmentManager(), "edit_user_dialog");
-        });
+            UserEditDialogFragment.newInstance(mainViewModel.currentUser.value)
+                    .show(parentFragmentManager, "edit_user_dialog")
+        }
 
         //rootView.findViewById(R.id.fragment_user_user_img);
 
         // поле описания полльзователя
-        TextView userDescription = rootView.findViewById(R.id.fragment_user_user_description);
+        val userDescription = rootView.findViewById<TextView>(R.id.fragment_user_user_description)
 
         // контейнер уведомлений пользователя
-        LinearLayout userNotificationsContainer = rootView.findViewById(R.id.fragment_user_notifications_container);
+        val userNotificationsContainer = rootView.findViewById<LinearLayout>(R.id.fragment_user_notifications_container)
 
 
-// -------------------------------- подписываемся на изменения во viewModel --------------------------------
+        // -------------------------------- подписываемся на изменения во viewModel --------------------------------
 
-//        // глобальное изменение переменной USER (создание или очистка)
-//        mainViewModel.currentUser.observe(this, dbUser -> {
-//
-//            // вывод строки состояния пользователя
-//            if (dbUser != null) {
-//                StringBuilder address = new StringBuilder();
-//                for (int i = 0; i < dbUser.getAddress().getArray().length; i++) {
-//                    address.append(dbUser.getAddress().getArray()[i]);
-//                    if (i != dbUser.getAddress().getArray().length - 1) address.append(", ");
-//                }
-//
-//                userDescription.setText(String.format(Locale.getDefault(),
-//                        "Рейтинг %.1f/5\nЭл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
-//                        dbUser.getRating(),
-//                        dbUser.getEmail(),
-//                        address,
-//                        dbUser.getName(),
-//                        dbUser.getPhoneNumber()
-//
-//                ));
-//            }
-//
-//        });
+        // глобальное изменение переменной USER (создание или очистка)
+        mainViewModel.currentUser.observe(viewLifecycleOwner) { dbUser ->
+
+            // вывод строки состояния пользователя
+            if (dbUser != null) {
+                val address = StringBuilder()
+
+                for (elementPos in dbUser.address.array.indices) {
+                    address.append(dbUser.address.array[elementPos])
+                    if (elementPos != dbUser.address.array.size-1) address.append(", ")
+                }
+
+                userDescription.text = String.format(Locale.getDefault(),
+                        "Рейтинг %.1f/5\nЭл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
+                        dbUser.rating,
+                        dbUser.email,
+                        address,
+                        dbUser.name,
+                        dbUser.phoneNumber
+
+                )
+            }
+
+        }
 
         // глобальное изменение переменной с уведомлениями пользователя
 //        mainViewModel.currentUserNotifications.observe(this, notifications -> {
@@ -155,8 +131,20 @@ public class UserFragment extends Fragment {
 //
 //            }
 //        });
+        return rootView
+    }
 
+    companion object {
+        // the fragment initialization parameters
+        private const val ARG_PARAM1 = "param1"
 
-        return rootView;
+        // Фабрика
+        fun newInstance(param1: String?): LoginFragment {
+            val fragment = LoginFragment()
+            val args = Bundle()
+            args.putString(ARG_PARAM1, param1)
+            fragment.arguments = args
+            return fragment
+        }
     }
 }

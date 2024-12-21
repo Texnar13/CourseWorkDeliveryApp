@@ -23,6 +23,7 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.texnar13.deliveryapp.model.DBUser
+import com.texnar13.deliveryapp.model.http.HttpApi
 import com.texnar13.deliveryapp.ui.login.LoginFragmentInterface
 import com.texnar13.deliveryapp.view_model.MainViewModel
 import com.texnar13.deliveryapp.view_model.MainViewModelFactory
@@ -66,22 +67,66 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
         val viewModel = MainViewModel.getViewModel(this)
 
 
+        // Привязываем отображение загрузки к сотоянию отправщика
+        viewModel.httpLoadingStatus.observe(this){ state ->
+            when(state){
+                HttpApi.Companion.HttpClientState.NO_WORK -> {
+                    disableLoadBar()
+                }
+                HttpApi.Companion.HttpClientState.IN_PROCESS -> {
+                    enableLoadBar()
+                }
+            }
+        }
+
+
+
+
+        // отслеживаем состояние подключения
+//        viewModel.activityConnectionStatus.observe(viewLifecycleOwner) { status ->
+//            when (status) {
+//                MainViewModel.ConnectionStatusValue.STATUS_NONE -> {
+//
+//                    // Включаем отображение загрузки
+//                    (requireActivity() as LoaderAndBottomPanel).enableLoadBar()
+//                    internetConnected = false
+//                }
+//
+//                MainViewModel.ConnectionStatusValue.STATUS_ERROR -> {
+//                    Toast.makeText(
+//                            context,
+//                            "Нет соединения с сервером...",
+//                            Toast.LENGTH_SHORT
+//                    ).show()
+//
+//                    internetConnected = false
+//                }
+//
+//                MainViewModel.ConnectionStatusValue.STATUS_CONNECTED -> {
+//        Log.e("Hello", "loaded")
+//        internetConnected = true
+//        loginContainer.visibility = View.VISIBLE
+//        registerButton.visibility = View.VISIBLE
+//
+//        (requireActivity() as LoaderAndBottomPanel).disableLoadBar()
+//
+//        Toast.makeText(context, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show()
+//                }
+//
+//                null -> {}
+//            }
+//        }
+
+
+
+
 
         // TODO УБРАТЬ ВО FRAGMENT ПОСТЕПЕННО
         // отслеживаем авторизацию и состояние текущего пользователя
-        viewModel.currentUser.observe(this) { user: DBUser? ->
-
+        viewModel.currentUser.observe(this) { user ->
             // если пользователь получен из базы
-            if (user != null) {
-                // переход на страницу пользователя
-                if (currentState == FState.LOGIN_FRAGMENT) {
-                    //navController!!.navigate<Any>(R.id.action_loginFragment_to_userFragment)// TODO ОК
-                } else if (currentState == FState.REGISTER_FRAGMENT) {
-                    // переход на главную страницу
-                    navController!!.navigate<Any>(R.id.action_registerFragment_to_mainFragment)
-                }
-            } else {
-//                // переход на страницу входа через backstack
+            if (user == null) {
+//                // переход на страницу входа через backstack// TODO
 //                myBackCallback.isEnabled = false
 //                onBackPressedDispatcher.onBackPressed()
 //                myBackCallback.isEnabled = true

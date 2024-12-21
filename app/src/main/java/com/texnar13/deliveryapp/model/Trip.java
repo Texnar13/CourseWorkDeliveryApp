@@ -1,6 +1,7 @@
 package com.texnar13.deliveryapp.model;
 
 public class Trip {
+
 //        extends RealmObject {
 //    @PrimaryKey
 //    @RealmField("_id")
@@ -32,8 +33,9 @@ public class Trip {
 //
 //    // методы доступа
 //
-//    public Trip() {
-//    }
+    public Trip() {
+
+    }
 //
 //    public Trip(ObjectId _id, String dopId, String departCountry, String departCity, String arriveCountry, String arriveCity, Date departDate, String transport, String cost) {
 //        this._id = _id;
