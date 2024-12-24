@@ -1,0 +1,177 @@
+package com.texnar13.deliveryapp.ui.user.dialogs;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.Fragment;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+
+import com.google.android.material.textfield.TextInputLayout;
+import com.texnar13.deliveryapp.R;
+import com.texnar13.deliveryapp.model.entities.EntityAddress;
+import com.texnar13.deliveryapp.model.entities.EntityUser;
+import com.texnar13.deliveryapp.view_model.MainViewModel;
+
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link UserEditDialogFragment#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class UserEditDialogFragment extends DialogFragment {
+
+    // the fragment initialization parameters
+    private static final String ARG_USER = "user";
+
+    public UserEditDialogFragment() {
+        // Required empty public constructor
+    }
+
+    //Use this factory method
+    public static UserEditDialogFragment newInstance(EntityUser user) {
+        UserEditDialogFragment fragment = new UserEditDialogFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_USER, user);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @NonNull
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        // начинаем строить диалог
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        // layout диалога
+        View dialogLayout = getLayoutInflater().inflate(R.layout.fragment_dialog_edit_user, null);
+        builder.setView(dialogLayout);
+
+        MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
+        // получаем пользователя
+        EntityUser user = viewModel.getCurrentUser().getValue();
+
+        if (user == null) {
+            dismiss();
+        } else {
+            // вывод данных в поля погулять
+            TextView userIdText = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_id);
+            userIdText.setText("id=" + user.getId());
+            TextInputLayout inputMail = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_mail);
+            inputMail.getEditText().setText(user.getEmail());
+            TextInputLayout inputName = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_name);
+            inputName.getEditText().setText(user.getName());
+            TextInputLayout inputPhone = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_phone);
+            inputPhone.getEditText().setText(user.getPhoneNumber().substring(1));
+            TextInputLayout inputCountry = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_country);
+            inputCountry.getEditText().setText(user.getAddress().getAddress()[0]);
+            TextInputLayout inputCity = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_city);
+            inputCity.getEditText().setText(user.getAddress().getAddress()[1]);
+            TextInputLayout inputDistrict = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_district);
+            inputDistrict.getEditText().setText(user.getAddress().getAddress()[2]);
+            TextInputLayout inputStreet = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_input_street);
+            inputStreet.getEditText().setText(user.getAddress().getAddress()[3]);
+
+            // кнопка отмены
+            Button cancelButton = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_cancel_button);
+            cancelButton.setOnClickListener(view -> dismiss());
+
+            // кнопка сохранения
+            Button acceptButton = dialogLayout.findViewById(R.id.fragment_edit_user_dialog_save_button);
+            acceptButton.setOnClickListener(v -> {
+
+
+                // --------- проверка полей ---------
+                boolean isCorrect = true;
+                if (inputCountry.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputCountry.setError("Поле пустое!");
+                } else
+                    inputCountry.setErrorEnabled(false);
+
+                if (inputCity.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputCity.setError("Поле пустое!");
+                } else
+                    inputCity.setErrorEnabled(false);
+
+                if (inputDistrict.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputDistrict.setError("Поле пустое!");
+                } else
+                    inputDistrict.setErrorEnabled(false);
+
+                if (inputStreet.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputStreet.setError("Поле пустое!");
+                } else
+                    inputStreet.setErrorEnabled(false);
+
+                if (inputMail.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputMail.setError("Поле пустое!");
+                } else
+                    inputMail.setErrorEnabled(false);
+
+                if (inputName.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputName.setError("Поле пустое!");
+                } else
+                    inputName.setErrorEnabled(false);
+
+                if (inputPhone.getEditText().getText().toString().trim().length() == 0) {
+                    isCorrect = false;
+                    inputPhone.setError("Поле пустое!");
+                } else if (inputPhone.getEditText().getText().toString().trim().length() != 11) {
+                    isCorrect = false;
+                    inputPhone.setError("Некорректный телефон!");
+                } else
+                    inputPhone.setErrorEnabled(false);
+
+
+                if (isCorrect) {
+                    // отправка изменённых значений в бд
+                    MainViewModel.Companion.getViewModel(requireActivity()).editUser(new EntityUser(
+                            user.getId(),
+                            user.getPassword(),
+                            new EntityAddress(
+                                    new String[]{
+                                            inputCountry.getEditText().getText().toString(),
+                                            inputCity.getEditText().getText().toString(),
+                                            inputDistrict.getEditText().getText().toString(),
+                                            inputStreet.getEditText().getText().toString()
+                                    }),
+                            inputMail.getEditText().getText().toString(),
+                            inputName.getEditText().getText().toString(),
+                            "+" + inputPhone.getEditText().getText().toString(),
+                            user.getRating()
+                    ));
+
+                    dismiss();
+                }
+            });
+        }
+
+        // наконец создаем диалог и возвращаем его
+        Dialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        return dialog;
+    }
+
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_dialog_edit_user, container, false);
+    }
+}
+
+

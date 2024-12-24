@@ -1,286 +1,253 @@
-package com.texnar13.deliveryapp.ui.expeditions.dialog;
+package com.texnar13.deliveryapp.ui.expeditions.dialog
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
+import android.app.AlertDialog
+import android.app.Dialog
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.textfield.TextInputLayout
+import com.texnar13.deliveryapp.R
+import com.texnar13.deliveryapp.model.entities.EntityAddress
+import com.texnar13.deliveryapp.model.entities.EntityExpedition
+import com.texnar13.deliveryapp.model.entities.EntityPackage
+import com.texnar13.deliveryapp.view_model.MainViewModel
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
-
-import com.google.android.material.textfield.TextInputLayout;
-import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.DBAddress;
-import com.texnar13.deliveryapp.model.DBExpedition;
-import com.texnar13.deliveryapp.model.DBPackage;
-import com.texnar13.deliveryapp.view_model.MainViewModel;
-
-public class ExpeditionEditDialogFragment extends DialogFragment {
-
-    // the fragment initialization parameters
-    private static final String ARG_EXPEDITION = "expedition";
-
-
-    TextInputLayout senderAddressField;
-    TextInputLayout receiverAddressField;
-    TextInputLayout boxNameField;
-    TextInputLayout boxCategoryField;
-    TextInputLayout boxDescriptionField;
-    TextInputLayout boxDimensField;
-    TextInputLayout boxWeightField;
+class ExpeditionEditDialogFragment : DialogFragment() {
+    lateinit var senderAddressField: TextInputLayout
+    lateinit var receiverAddressField: TextInputLayout
+    lateinit var boxNameField: TextInputLayout
+    lateinit var boxCategoryField: TextInputLayout
+    lateinit var boxDescriptionField: TextInputLayout
+    lateinit var boxDimensField: TextInputLayout
+    lateinit var boxWeightField: TextInputLayout
 
 
-    public ExpeditionEditDialogFragment() {
-        // Required empty public constructor
-    }
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        super.onCreate(savedInstanceState)
 
-    //Use this factory method
-    public static ExpeditionEditDialogFragment newInstance(DBExpedition expedition) {
-        ExpeditionEditDialogFragment fragment = new ExpeditionEditDialogFragment();
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_EXPEDITION, expedition);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // получаем отправление
-        Bundle arguments = requireArguments();
-        DBExpedition expedition = (DBExpedition) arguments.get(ARG_EXPEDITION);
-
-        // начинаем строить диалог
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        // -------- начинаем строить диалог --------
+        val builder = AlertDialog.Builder(activity)
         // layout диалога
-        View dialogLayout = getLayoutInflater().inflate(R.layout.fragment_dialog_edit_expeditions, null);
-        builder.setView(dialogLayout);
-
+        val dialogLayout = layoutInflater.inflate(R.layout.fragment_dialog_edit_expeditions, null)
+        builder.setView(dialogLayout)
 
         // инициализация разметки
-        TextView titleText = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_title);
-        TextView idText = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_id);
+        val titleText = dialogLayout.findViewById<TextView>(R.id.fragment_dialog_edit_expeditions_title)
+        val idText = dialogLayout.findViewById<TextView>(R.id.fragment_dialog_edit_expeditions_id)
 
-        senderAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_sender_address);
-        receiverAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_receiver_address);
-        boxNameField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_name);
-        boxCategoryField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_category);
-        boxDescriptionField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_description);
-        boxDimensField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_dimens);
-        boxWeightField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_weight);
+        senderAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_sender_address)
+        receiverAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_receiver_address)
+        boxNameField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_name)
+        boxCategoryField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_category)
+        boxDescriptionField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_description)
+        boxDimensField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_dimens)
+        boxWeightField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_weight)
 
-        Button cancelButton = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_cancel_button);
-        cancelButton.setOnClickListener(v -> dismiss());
-        Button saveButton = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_save_button);
+        val cancelButton = dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_cancel_button)
+        cancelButton.setOnClickListener { dismiss() }
+        val saveButton = dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_save_button)
+
+
+        // -------- получаем данные из viewModel --------
+        val viewModel = MainViewModel.getViewModel(requireActivity())
+
+        // получаем отправление
+        val expedition = viewModel.selectedExpedition.value
 
 
         // вывод данных в поля, погулять
         if (expedition == null) {
-            titleText.setText("Cоздание отправления");
-            idText.setText("id=new");
+            titleText.text = "Cоздание отправления"
+            idText.text = "id=new"
         } else {
-//            titleText.setText("Редактирование отправления");
-//            idText.setText("id=" + expedition.get_id());
-//
-//            senderAddressField.getEditText().setText(expedition.getAddressSender().getString());
-//            receiverAddressField.getEditText().setText(expedition.getAddressReceiver().getString());
-//
-//            boxNameField.getEditText().setText(expedition.getPackage().getName());
-//            boxCategoryField.getEditText().setText(expedition.getPackage().getCategory());
-//            boxDescriptionField.getEditText().setText(expedition.getPackage().getDescription());
-//            boxDimensField.getEditText().setText(expedition.getPackage().getDimensionsString());
-//            boxWeightField.getEditText().setText("" + expedition.getPackage().getWeight());
+            titleText.text = "Редактирование отправления"
+            idText.text = "id=" + expedition.id
+
+            senderAddressField.editText!!.setText(expedition.addressSender.getString())
+            receiverAddressField.editText!!.setText(expedition.addressReceiver.getString())
+
+            boxNameField.editText!!.setText(expedition.expeditionPackage.name)
+            boxCategoryField.editText!!.setText(expedition.expeditionPackage.category)
+            boxDescriptionField.editText!!.setText(expedition.expeditionPackage.description)
+            boxDimensField.editText!!.setText(expedition.expeditionPackage.getDimensionsString())
+            boxWeightField.editText!!.setText("" + expedition.expeditionPackage.weight)
         }
 
         // кнопка сохранения
-        saveButton.setOnClickListener(v -> {
+        saveButton.setOnClickListener {
 
             // проверка полей
             if (checkFields()) {
-
                 // разбиваем по запятым
-                String[] senderAddressesArray =
-                        senderAddressField.getEditText().getText().toString().trim().split(",");
-                for (int i = 0; i < senderAddressesArray.length; i++)
-                    senderAddressesArray[i] = senderAddressesArray[i].trim();
 
-                String[] receiverAddressesArray =
-                        receiverAddressField.getEditText().getText().toString().trim().split(",");
-                for (int i = 0; i < receiverAddressesArray.length; i++)
-                    receiverAddressesArray[i] = receiverAddressesArray[i].trim();
+                val senderAddressesArray =
+                        senderAddressField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                for (i in senderAddressesArray.indices) senderAddressesArray[i] = senderAddressesArray[i].trim { it <= ' ' }
 
-                String[] dimensStringArray = boxDimensField.getEditText().getText().toString().trim().split(",");
-                double[] dimensArray = new double[dimensStringArray.length];
-                for (int i = 0; i < dimensStringArray.length; i++)
-                    dimensArray[i] = Double.parseDouble(dimensStringArray[i].trim());
+                val receiverAddressesArray =
+                        receiverAddressField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                for (i in receiverAddressesArray.indices) receiverAddressesArray[i] = receiverAddressesArray[i].trim { it <= ' ' }
 
-                MainViewModel mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+                val dimensStringArray = boxDimensField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val dimensArray = Array(dimensStringArray.size) { pos -> dimensStringArray[pos].trim().toFloat() }
+
+                val mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
 
                 // если это создание нового
                 if (expedition == null) {
-                    mainViewModel.createExpedition(new DBExpedition(
-                            null,
-                            new DBAddress(receiverAddressesArray),
-                            new DBAddress(senderAddressesArray),
-                            DBExpedition.EXPEDITION_STATUS_VALUE_WAIT_SEND,
-                            null,
-                            new DBPackage(
-                                    boxCategoryField.getEditText().getText().toString(),
-                                    boxDescriptionField.getEditText().getText().toString(),
+                    mainViewModel.createExpedition(EntityExpedition(
+                            0,
+                            EntityAddress(receiverAddressesArray),
+                            EntityAddress(senderAddressesArray),
+                            EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
+                            12,
+                            EntityPackage(
+                                    boxCategoryField.editText!!.text.toString(),
+                                    boxDescriptionField.editText!!.text.toString(),
                                     dimensArray,
-                                    Double.parseDouble(boxWeightField.getEditText().getText().toString()),
-                                    boxNameField.getEditText().getText().toString(),
+                                    boxWeightField.editText!!.text.toString().toFloat(),
+                                    boxNameField.editText!!.text.toString(),
                                     "URL"
                             )
-                    ));
-
+                    ))
                 } else {
                     // если это редактирование старого
                     mainViewModel.editExpedition(
-                        new DBExpedition(
-                                expedition.get_id(),
-                                new DBAddress(receiverAddressesArray),
-                                new DBAddress(senderAddressesArray),
-                                DBExpedition.EXPEDITION_STATUS_VALUE_WAIT_SEND,
-                                expedition.getSender(),
-                                new DBPackage(
-                                        boxCategoryField.getEditText().getText().toString(),
-                                        boxDescriptionField.getEditText().getText().toString(),
-                                        dimensArray,
-                                        Double.parseDouble(boxWeightField.getEditText().getText().toString()),
-                                        boxNameField.getEditText().getText().toString(),
-                                        expedition.getPackage().getPicture()
-                                )
-                        )
-                    );
-
+                            EntityExpedition(
+                                    expedition.id,
+                                    EntityAddress(receiverAddressesArray),
+                                    EntityAddress(senderAddressesArray),
+                                    EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
+                                    expedition.sender,
+                                    EntityPackage(
+                                            boxCategoryField.editText!!.text.toString(),
+                                            boxDescriptionField.editText!!.text.toString(),
+                                            dimensArray,
+                                            boxWeightField.editText!!.text.toString().toDouble().toFloat(),
+                                            boxNameField.editText!!.text.toString(),
+                                            expedition.expeditionPackage.picture
+                                    )
+                            )
+                    )
                 }
-                dismiss();
+                dismiss()
             }
-        });
+        }
+
 
         // наконец создаем диалог и возвращаем его
-        Dialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        return dialog;
+        val dialog: Dialog = builder.create()
+        dialog.window!!.setBackgroundDrawableResource(android.R.color.transparent)
+        return dialog
     }
 
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_dialog_edit_user, container, false);
+        return inflater.inflate(R.layout.fragment_dialog_edit_user, container, false)
     }
 
 
     // --------- проверка полей ---------
-    boolean checkFields() {
-        boolean isCorrect = true;
+    private fun checkFields(): Boolean {
+        var isCorrect = checkAddress(senderAddressField)
 
         // Если адрес не прошел проверку
-        if (!checkAddress(senderAddressField)) isCorrect = false;
-        if (!checkAddress(receiverAddressField)) isCorrect = false;
+        if (!checkAddress(receiverAddressField)) isCorrect = false
 
         // проверка пустых полей
-        if (!checkFieldOnEmpty(boxNameField)) isCorrect = false;
-        if (!checkFieldOnEmpty(boxCategoryField)) isCorrect = false;
-        if (!checkFieldOnEmpty(boxDescriptionField)) isCorrect = false;
+        if (!checkFieldOnEmpty(boxNameField)) isCorrect = false
+        if (!checkFieldOnEmpty(boxCategoryField)) isCorrect = false
+        if (!checkFieldOnEmpty(boxDescriptionField)) isCorrect = false
 
         // поле габаритов
-        if (!checkDimensField(boxDimensField)) isCorrect = false;
+        if (!checkDimensField(boxDimensField)) isCorrect = false
 
         // поле веса
         try {
-            Double.valueOf(boxWeightField.getEditText().getText().toString());
-            boxWeightField.setErrorEnabled(false);
-        } catch (NumberFormatException e) {
-            boxWeightField.setError("Неправильное число!");
-            isCorrect = false;
+            boxWeightField.editText!!.text.toString().toDouble()
+            boxWeightField.isErrorEnabled = false
+        } catch (e: NumberFormatException) {
+            boxWeightField.error = "Неправильное число!"
+            isCorrect = false
         }
-        return isCorrect;
+        return isCorrect
     }
 
-    private boolean checkAddress(@NonNull TextInputLayout inputLayout) {
+    private fun checkAddress(inputLayout: TextInputLayout): Boolean {
+        val inputText = inputLayout.editText!!.text.toString().trim { it <= ' ' }
 
-        String inputText = inputLayout.getEditText().getText().toString().trim();
-
-        if (inputText.length() == 0) {
-            inputLayout.setError("Поле пустое!");
-            return false;
+        if (inputText.length == 0) {
+            inputLayout.error = "Поле пустое!"
+            return false
         } else {
             // разбиваем адрес по запятым
-            String[] addressesArray = inputText.split(",");
-            for (int i = 0; i < addressesArray.length; i++)
-                addressesArray[i] = addressesArray[i].trim();
+            val addressesArray = inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            for (i in addressesArray.indices) addressesArray[i] = addressesArray[i].trim { it <= ' ' }
 
             // нехватает полей
-            if (addressesArray.length != 4) {
-                inputLayout.setError("Ночь, Улица, Фонарь, Аптека");
-                return false;
+            if (addressesArray.size != 4) {
+                inputLayout.error = "Ночь, Улица, Фонарь, Аптека"
+                return false
             } else {
                 // проверка каждого отдельного слова
-                for (String s : addressesArray)
-                    if (s.length() == 0) {
-                        inputLayout.setError("Ночь, Улица, Фонарь, Аптека");
-                        return false;
-                    }
+                for (s in addressesArray) if (s.isEmpty()) {
+                    inputLayout.error = "Ночь, Улица, Фонарь, Аптека"
+                    return false
+                }
             }
         }
 
         // всё ок
-        inputLayout.setErrorEnabled(false);
-        return true;
+        inputLayout.isErrorEnabled = false
+        return true
     }
 
-    private boolean checkFieldOnEmpty(@NonNull TextInputLayout inputLayout) {
-        if (inputLayout.getEditText().getText().toString().trim().length() == 0) {
-            inputLayout.setError("Поле пустое!");
-            return false;
+    private fun checkFieldOnEmpty(inputLayout: TextInputLayout): Boolean {
+        if (inputLayout.editText!!.text.toString().trim { it <= ' ' }.isEmpty()) {
+            inputLayout.error = "Поле пустое!"
+            return false
         }
-        inputLayout.setErrorEnabled(false);
-        return true;
+        inputLayout.isErrorEnabled = false
+        return true
     }
 
-    private boolean checkDimensField(@NonNull TextInputLayout inputLayout) {
+    private fun checkDimensField(inputLayout: TextInputLayout): Boolean {
+        val inputText = inputLayout.editText!!.text.toString().trim { it <= ' ' }
 
-        String inputText = inputLayout.getEditText().getText().toString().trim();
-
-        if (inputText.length() == 0) {
-            inputLayout.setError("Поле пустое!");
-            return false;
+        if (inputText.length == 0) {
+            inputLayout.error = "Поле пустое!"
+            return false
         } else {
-
             // разбиваем по запятым
-            String[] dimensArray = inputText.split(",");
-            for (int i = 0; i < dimensArray.length; i++)
-                dimensArray[i] = dimensArray[i].trim();
+
+            val dimensArray = inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            for (i in dimensArray.indices) dimensArray[i] = dimensArray[i].trim { it <= ' ' }
 
             // нехватает полей
-            if (dimensArray.length != 3) {
-                inputLayout.setError("Ширина, Высота, Глубина");
-                return false;
+            if (dimensArray.size != 3) {
+                inputLayout.error = "Ширина, Высота, Глубина"
+                return false
             } else {
                 // проверка каждого отдельного числа
-                for (String s : dimensArray)
-                    try {
-                        Double.parseDouble(s);
-                    }catch (NumberFormatException e){
-                        inputLayout.setError("Ширина, Высота, Глубина");
-                        return false;
-                    }
+                for (s in dimensArray) try {
+                    s.toDouble()
+                } catch (e: NumberFormatException) {
+                    inputLayout.error = "Ширина, Высота, Глубина"
+                    return false
+                }
             }
         }
 
         // всё ок
-        inputLayout.setErrorEnabled(false);
-        return true;
+        inputLayout.isErrorEnabled = false
+        return true
     }
 
 

@@ -77,7 +77,7 @@ android:padding="@dimen/containers_margin">
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="bottom"
-        android:text="Написать"
+        android:text="Перейти к маршруту"
         android:textColor="@color/button_text_color"
         android:textSize="@dimen/simple_text_size" />
 </LinearLayout>

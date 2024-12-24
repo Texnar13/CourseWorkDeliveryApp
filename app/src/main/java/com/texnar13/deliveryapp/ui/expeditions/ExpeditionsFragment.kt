@@ -1,162 +1,201 @@
-package com.texnar13.deliveryapp.ui.expeditions;
+package com.texnar13.deliveryapp.ui.expeditions
 
-import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.DBExpedition;
-import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionEditDialogFragment;
-import com.texnar13.deliveryapp.view_model.MainViewModel;
-
-import java.util.Locale;
-
-public class ExpeditionsFragment extends Fragment {
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.texnar13.deliveryapp.R
+import com.texnar13.deliveryapp.model.entities.EntityExpedition
+import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionEditDialogFragment
+import com.texnar13.deliveryapp.view_model.MainViewModel
+import java.util.Locale
 
 
-    // Required empty public constructor
-    public ExpeditionsFragment() {
-    }
+class ExpeditionsFragment : Fragment() {
 
-    // factory method
-    public static ExpeditionsFragment newInstance(String param1) {
-        ExpeditionsFragment fragment = new ExpeditionsFragment();
-        Bundle args = new Bundle();
-        //args.putString(ARG_PARAM1, param1);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        MainViewModel mainViewModel = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
-
-// ------------------------------------------- разметка -------------------------------------------
-        View rootView = inflater.inflate(R.layout.fragment_expeditions, container, false);
-
-        // кнопка добавить отправление
-        View addButton = rootView.findViewById(R.id.fragment_expeditions_add_button);
-        addButton.setOnClickListener(v -> {
-            // вызов диалога
-            ExpeditionEditDialogFragment.newInstance(null)
-                    .show(getParentFragmentManager(), "ExpeditionEditDialogFragment");
-        });
+        // ----- разметка -----
+        val rootView = inflater.inflate(R.layout.fragment_expeditions, container, false)
 
         // контейнер отправлений
-        LinearLayout boxesContainer = rootView.findViewById(R.id.fragment_expeditions_container);
+        val boxesContainer = rootView.findViewById<LinearLayout>(R.id.fragment_expeditions_container)
 
 
-// -------------------------------- подписываемся на изменения во viewModel --------------------------------
+        // ----- Работа с viewModel -----
+        val mainViewModel = MainViewModel.getViewModel(requireActivity())
 
-        mainViewModel.getCurrentUserExpeditions().observe(getViewLifecycleOwner(), dbExpeditions -> {
+
+        // кнопка добавить отправление
+        val addButton = rootView.findViewById<View>(R.id.fragment_expeditions_add_button)
+        addButton.setOnClickListener {
+
+            // вызываем диалог с пустыми начальными данными
+            editExpedition(null)
+        }
+
+
+        // получаем отправления пользователя
+        mainViewModel.loadUserExpeditions()
+
+        // Подписываемся на список отправлений
+        mainViewModel.currentUserExpeditions.observe(viewLifecycleOwner) { dbExpeditions: List<EntityExpedition> ->
 
             // вывод списка
-            boxesContainer.removeAllViews();
-
-            // проходимся по всем отправлениям
-            for (DBExpedition expeditionUnit : dbExpeditions) {
-                // получеам конкретное уведомление
-                // создание разметки
-                View notificationViewElement = getLayoutInflater().inflate(
-                        R.layout.element_expedition_box, null);
-
-                TextView title = notificationViewElement.findViewById(R.id.element_expedition_box_title);
-                TextView description = notificationViewElement.findViewById(R.id.element_expedition_box_description);
-                TextView state = notificationViewElement.findViewById(R.id.element_expedition_box_state);
-                //ImageView img = notificationViewElement.findViewById(R.id.element_expedition_box_img);
-                TextView buttonEdit = notificationViewElement.findViewById(R.id.element_expedition_box_button_edit);
-                TextView buttonFindSomebody = notificationViewElement.findViewById(R.id.element_expedition_box_button_find_somebody);
-                TextView buttonConnect = notificationViewElement.findViewById(R.id.element_expedition_box_button_connect);
+            listOut(
+                    boxesContainer,
+                    dbExpeditions
+            )
+        }
+        return rootView
+    }
 
 
-                title.setText(expeditionUnit.getPackage().getName());
-                description.setText(String.format(
-                        Locale.getDefault(), "Категория %s \nиз %s, %s -> в %s, %s\n" +
-                                "Описание %s \nВес %.1fКГ\nГабариты %.1fx%.1fx%.1fсм",
-                        expeditionUnit.getPackage().getCategory(),
-                        expeditionUnit.getAddressSender().getArray()[0],
-                        expeditionUnit.getAddressSender().getArray()[1],
-                        expeditionUnit.getAddressReceiver().getArray()[0],
-                        expeditionUnit.getAddressReceiver().getArray()[1],
-                        expeditionUnit.getPackage().getDescription(),
-                        expeditionUnit.getPackage().getWeight(),
-                        expeditionUnit.getPackage().getDimensions()[0],
-                        expeditionUnit.getPackage().getDimensions()[1],
-                        expeditionUnit.getPackage().getDimensions()[2]
-                ));
+    надо убрать кнопки при статусе отправлено
 
-                // статус
-                switch (expeditionUnit.getStatus()) {
-                    case DBExpedition.EXPEDITION_STATUS_VALUE_WAIT_SEND:
-                        // выставляем статус
-                        state.setText("Ожидает отправки");
-                        state.setTextColor(getResources().getColor(R.color.wait_mail_text_color));
+    // вывод списка
+    private fun listOut(outContainer: LinearLayout, expeditionsList: List<EntityExpedition>) {
+        outContainer.removeAllViews()
 
-                        // кнопки
-                        buttonEdit.setOnClickListener(v -> {
-                            // вызов диалога
-                            ExpeditionEditDialogFragment.newInstance(expeditionUnit)
-                                    .show(getParentFragmentManager(), "ExpeditionEditDialogFragment");
-                        });
-                        buttonFindSomebody.setOnClickListener(v -> {
-                            state.setText("buttonFindSomebody");
-                        });
-                        buttonConnect.setVisibility(View.INVISIBLE);
-                        break;
-                    case DBExpedition.EXPEDITION_STATUS_VALUE_SENT:
-                        // выставляем статус
-                        state.setText("ОТПРАВЛЕНО");
-                        state.setTextColor(getResources().getColor(R.color.sent_mail_text_color));
+        // проходимся по всем отправлениям
+        for (expeditionUnit in expeditionsList) {
+            // получеам конкретное уведомление
+            // создание разметки
+            val notificationViewElement = layoutInflater.inflate(
+                    R.layout.element_expedition_box, null)
 
-                        // кнопки
-                        buttonEdit.setOnClickListener(v -> {
-                            // вызов диалога
-                            ExpeditionEditDialogFragment.newInstance(expeditionUnit)
-                                    .show(getParentFragmentManager(), "ExpeditionEditDialogFragment");
-                        });
-                        buttonFindSomebody.setVisibility(View.INVISIBLE);
-                        buttonConnect.setOnClickListener(v -> {
-                            state.setText("buttonConnect");
-                        });
-                        break;
-                    case DBExpedition.EXPEDITION_STATUS_VALUE_DONE:
-                        // выставляем статус
-                        state.setText("Завершено");
-                        state.setTextColor(getResources().getColor(R.color.ended_mail_text_color));
+            val title = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_title)
+            val description = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_description)
+            val state = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_state)
+            //ImageView img = notificationViewElement.findViewById(R.id.element_expedition_box_img);
+            val buttonEdit = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_button_edit)
+            val buttonFindSomebody = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_button_find_somebody)
+            val buttonConnect = notificationViewElement.findViewById<TextView>(R.id.element_expedition_box_button_connect)
 
-                        // кнопки
-                        buttonEdit.setVisibility(View.INVISIBLE);
-                        buttonFindSomebody.setVisibility(View.INVISIBLE);
-                        buttonConnect.setVisibility(View.INVISIBLE);
-                        break;
+
+            title.text = expeditionUnit.expeditionPackage.name
+            description.text = String.format(
+                    Locale.getDefault(), """
+                        Категория %s 
+                        из %s, %s -> в %s, %s
+                        Описание %s 
+                        Вес %.1fКГ
+                        Габариты %.1fx%.1fx%.1fсм
+                        """.trimIndent(),
+                    expeditionUnit.expeditionPackage.category,
+                    expeditionUnit.addressSender.address[0],
+                    expeditionUnit.addressSender.address[1],
+                    expeditionUnit.addressReceiver.address[0],
+                    expeditionUnit.addressReceiver.address[1],
+                    expeditionUnit.expeditionPackage.description,
+                    expeditionUnit.expeditionPackage.weight,
+                    expeditionUnit.expeditionPackage.dimensions[0],
+                    expeditionUnit.expeditionPackage.dimensions[1],
+                    expeditionUnit.expeditionPackage.dimensions[2]
+            )
+
+            when (expeditionUnit.status) {
+                EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND -> {
+                    // выставляем статус
+                    state.text = "Ожидает отправки"
+                    state.setTextColor(resources.getColor(R.color.wait_mail_text_color))
+
+                    // кнопки
+                    buttonEdit.setOnClickListener {
+                        // редактирование отправления
+                        editExpedition(expeditionUnit)
+                    }
+                    buttonFindSomebody.setOnClickListener {
+                        // поиск маршрута
+                        gotoFindTrajectory(expeditionUnit)
+                    }
+                    buttonConnect.visibility = View.INVISIBLE
                 }
 
+                EntityExpedition.Companion.ExpeditionStatus.SENT -> {
+                    // выставляем статус
+                    state.text = "ОТПРАВЛЕНО"
+                    state.setTextColor(resources.getColor(R.color.sent_mail_text_color))
 
-                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-                layoutParams.topMargin = getResources().getDimensionPixelOffset(R.dimen.containers_margin);
+                    // кнопки
+                    buttonEdit.setOnClickListener {
+                        // редактирование отправления
+                        editExpedition(expeditionUnit)
+                    }
+                    buttonFindSomebody.visibility = View.INVISIBLE
+                    buttonConnect.setOnClickListener {
+                        // поиск маршрута
+                        gotoFindTrajectory(expeditionUnit)
+                    }
+                }
 
-                boxesContainer.addView(
-                        notificationViewElement,layoutParams
-                );
+                EntityExpedition.Companion.ExpeditionStatus.DONE -> {
+                    // выставляем статус
+                    state.text = "Завершено"
+                    state.setTextColor(resources.getColor(R.color.ended_mail_text_color))
+
+                    // кнопки
+                    buttonEdit.visibility = View.INVISIBLE
+                    buttonFindSomebody.visibility = View.INVISIBLE
+                    buttonConnect.visibility = View.INVISIBLE
+                }
             }
-        });
-        return rootView;
+            val layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            layoutParams.topMargin = resources.getDimensionPixelOffset(R.dimen.containers_margin)
+
+            outContainer.addView(notificationViewElement, layoutParams)
+        }
+    }
+
+
+    // показать диалог редактирования или создания
+    private fun editExpedition(expedition: EntityExpedition?) {
+
+        // передаём данные в диалог через view Model
+        MainViewModel.getViewModel(requireActivity()).selectExpeditionForEdit(expedition)
+
+        // вызов диалога
+        ExpeditionEditDialogFragment()
+                .show(parentFragmentManager, "ExpeditionEditDialogFragment")
+
+    }
+
+    // перейти к окну поиска
+    private fun gotoFindTrajectory(expedition: EntityExpedition) {
+
+        // передаём данные на страницу поиска маршрутов через view Model
+        MainViewModel.getViewModel(requireActivity()).selectExpeditionForEdit(expedition)
+
+
+        // переход на страницу поиска маршрутов
+
+        val bottomNavigationView: BottomNavigationView = requireActivity().findViewById(R.id.activity_main_bottom_navigation)
+        bottomNavigationView.selectedItemId = R.id.fragment_trajectories
+
+//        Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).navigate(
+//                R.id.action_fragment_expeditions_to_fragment_trajectories
+//        )
+
+    }
+
+
+    companion object {
+        // factory method
+        fun newInstance(param1: String?): ExpeditionsFragment {
+            val fragment = ExpeditionsFragment()
+            val args = Bundle()
+            //args.putString(ARG_PARAM1, param1);
+            fragment.setArguments(args)
+            return fragment
+        }
     }
 }
-

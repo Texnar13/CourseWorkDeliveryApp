@@ -1,26 +1,19 @@
 package com.texnar13.deliveryapp.view_model
 
 import android.util.Log
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.texnar13.deliveryapp.model.DBAddress
-import com.texnar13.deliveryapp.model.DBExpedition
-import com.texnar13.deliveryapp.model.DBNotification
-import com.texnar13.deliveryapp.model.DBTrip
-import com.texnar13.deliveryapp.model.DBUser
+import com.texnar13.deliveryapp.model.entities.EntityExpedition
+import com.texnar13.deliveryapp.model.entities.EntityTrip
 import com.texnar13.deliveryapp.model.entities.EntityUser
 import com.texnar13.deliveryapp.model.http.HttpApi
 import com.texnar13.deliveryapp.model.shared_preferences.SPHolder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
@@ -29,7 +22,7 @@ import java.security.NoSuchAlgorithmException
 class MainViewModel(
         private val httpClient: HttpApi,
         private val spHolder: SPHolder
-) : ViewModel(), HttpApi.HttpResultListener, HttpApi.HttpWorkStatusListener {
+) : ViewModel(), HttpApi.HttpResultAndStatusListener {
 
 
 // ------------------------------------------- Константы -------------------------------------------
@@ -71,75 +64,48 @@ class MainViewModel(
     }
 
 
-//todo ---------------------------------------------------------------------------------------------
-// ----------------------------------------- Общие данные ------------------------------------------
 // -------------------------------------------------------------------------------------------------
+// -------------------------------------- Загруженные данные ---------------------------------------
+// -------------------------------------------------------------------------------------------------
+
 
     var token: MutableLiveData<String?> = MutableLiveData(null)
 
+    // текущий пользователь
+    var currentUser: MutableLiveData<EntityUser?> = MutableLiveData(null)
 
-// ------------------------------------------ Связь с активностью ---------------------------------------
+    // посылки пользователя
+    val currentUserExpeditions: MutableLiveData<List<EntityExpedition>> = MutableLiveData()
 
+    val selectedExpedition: MutableLiveData<EntityExpedition?> = MutableLiveData(null)
+
+
+    // загруженные поездки
+    var currentLoadedTrips: MutableLiveData<List<EntityTrip>> = MutableLiveData()
+
+
+// -------------------------------------------------------------------------------------------------
+// ------------------------------------------ Конструктор ------------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+    // нициализация
+    init {
+        Log.i(TAG, "init")
+
+        // назначаем слушатель HTTP ответов и статуса
+        httpClient.setHttpResultListener(this)
+    }
+
+
+// -------------------------------------------------------------------------------------------------
+// ------------------------------------- Отправка уведомлений --------------------------------------
+// -------------------------------------------------------------------------------------------------
 
     // строка для отправки тостов
     var toastMessage: MutableLiveData<String> = MutableLiveData()
 
     private fun sendToast(message: String) {
         toastMessage.postValue(message)
-    }
-
-    // статус подключения
-    enum class ConnectionStatusValue {
-        STATUS_NONE,
-        STATUS_ERROR,
-        STATUS_CONNECTED,
-    }
-
-
-// -------------------------------------- Загруженные данные ---------------------------------------
-
-    // текущий пользователь
-    var currentUser: MutableLiveData<EntityUser?> = MutableLiveData(null)
-
-    // уведомления
-    var currentUserNotifications: MutableLiveData<List<DBNotification>> = MutableLiveData()
-
-    // посылки пользователя
-    var currentUserExpeditions: MutableLiveData<List<DBExpedition>> = MutableLiveData()
-
-    // загруженные поездки
-    var currentLoadedTrips: MutableLiveData<List<DBTrip>> = MutableLiveData()
-
-
-    // ------------------------------------------ Главные методы ---------------------------------------
-    // todo это соответственно переносится во ViewModel,
-    //            //   а enableLoadBar() работает через подписку на ViewModel
-    //            //   нажатие кнопок и обратня связь от фрагментов делегируется во viewModel
-    //            //   LiveData и MutableLiveData :)
-    //            //   Можно сделать так, чтобы LiveData следила за MutableLiveData и избежать getter-ов и setter-ов
-    //            //   контекст view model не хранит, но он передаётся в методах
-    //
-    //            //
-
-
-    // нициализация
-    init {
-        Log.i(TAG, "init")
-
-        // назначаем слушатель HTTP ответов
-        httpClient.setHttpResultListener(this)
-        httpClient.setHttpWorkStatusListener(this)
-    }
-
-
-    // ---------------------------------------------- БД -----------------------------------------------
-
-
-
-    // выход из учетной записи пользователя
-    fun logout() {
-        Log.i(TAG, "logout")
-        currentUser.value = null
     }
 
 // -------------------------------------------------------------------------------------------------
@@ -154,13 +120,13 @@ class MainViewModel(
 
         viewModelScope.launch {
             // чтобы разметка корректно отрабатывала события
-            delay(20)
+            delay(100)
             mutableHttpLoadingStatus.postValue(state)
         }
     }
 
 
-//todo ---------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 // -------------------------- Регистрация пользователя (Создание учётки) ---------------------------
 // -------------------------------------------------------------------------------------------------
 
@@ -173,25 +139,22 @@ class MainViewModel(
     ) {
         Log.i(TAG, "tryRegisterUser")
 
-        // пытаемся аутентифицировать пользователя
-        httpClient.createNewUser(
-                email = "myemail21@email.com",
-                password = "1",
-                confirmPassword = "1",
-                address = address,
-                name = name,
-                phone = phone
-        )
+        viewModelScope.launch {
 
-        // в любом случае сохраняем последние введённые поля
-        spHolder.setUserLastAuth(
-                email,
-                password
-        )
+            // пытаемся аутентифицировать пользователя
+            httpClient.createNewUser(
+                    email = email,
+                    password = password,
+                    confirmPassword = password,
+                    address = address,
+                    name = name,
+                    phone = phone
+            )
+        }
     }
 
     // обратная связь от Api
-    override fun httpCreateUserFailure(status: String) {
+    override fun httpCreateUserFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
         Log.i(TAG, "httpCreateUserFailure status=$status")
         sendToast("Ошибка при создании пользователя: $status")
     }
@@ -210,9 +173,14 @@ class MainViewModel(
     }
 
 
-//todo ---------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 // --------------------------------- Аутентификация пользователя -----------------------------------
 // -------------------------------------------------------------------------------------------------
+
+    // получение уже введённых ранее логина и пароля
+    fun getUserLastAuth(): Array<String> {
+        return spHolder.getUserLastAuth()
+    }
 
     fun authUser(email: String, password: String) {
         Log.i(TAG, "authUser email=$email password=$password")
@@ -222,10 +190,16 @@ class MainViewModel(
             // вход пользователя
             httpClient.loginUser(email, password)
         }
+
+        // в любом случае сохраняем последние введённые поля
+        spHolder.setUserLastAuth(
+                email,
+                password
+        )
     }
 
     // обратная связь от Api
-    override fun httpLoginUserFailure(status: String) {
+    override fun httpLoginUserFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
         Log.i(TAG, "httpLoginUserFailure status=$status")
         sendToast("Ошибка: $status")
     }
@@ -246,9 +220,9 @@ class MainViewModel(
     }
 
     // Получение данных пользователя неуспешно
-    override fun httpGetUserDataFailure(status: String) {
+    override fun httpGetUserDataFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
         Log.i(TAG, "httpGetUserDataFailure status=$status")
-        TODO("Not yet implemented")
+
     }
 
     // Данные пользователя получены
@@ -259,177 +233,59 @@ class MainViewModel(
     }
 
 
-//todo ---------------------------------------------------------------------------------------------
-// -----------------------------------  ------------------------------------
+// -------------------------------------------------------------------------------------------------
+// --------------------------------- Страничка пользователя -----------------------------------
 // -------------------------------------------------------------------------------------------------
 
 
+    // выход из учетной записи пользователя
+    fun logout() {
+        Log.i(TAG, "logout")
+        token.postValue(null)
+    }
+
     // редактирование пользователя
     fun editUser(editedUserData: EntityUser) {
-//        Document editedDocument = editedUserData.getDocument();
-//
-//        // получаем таблицу пользователей
-//        MongoCollection<Document> usersCollection = mongoDatabase.getCollection(DBUser.TABLE_NAME);
-//
-//        // Получаем идентификатор пользователя из измененных данных
-//        ObjectId userId = editedDocument.getObjectId(DBUser.USER_ID);
-//
-//        // Обновляем документ пользователя новыми данными
-//        usersCollection.findOneAndReplace(new Document(DBUser.USER_ID, userId), editedDocument).getAsync(result -> {
-//            if (result.isSuccess()) {
-//                Document updatedUser = result.get();
-//                if (updatedUser != null) {
-//                    // если данные сохранены успешно, обновляем глобальную копию переменной и интерфейс
-//                    currentUser.setValue(editedUserData);
-//                    sendToast("Данные пользователя успешно сохранены");
-//                } else {
-//                    sendToast("Ошибка, пользователь не найден");
-//                }
-//            } else {
-//                sendToast("Ошибка при сохранении данных пользователя");
-//            }
-//        });
+
+        // отправляем асинхроннный запрос
+        viewModelScope.launch {
+            httpClient.editUserData(editedUserData)
+        }
+
     }
 
-    fun loadUserNotifications() {
-        val user = currentUser.value
-        if (user != null) {
-            //            // получаем таблицу уведомлений
-//            MongoCollection<Document> notificationsCollection = mongoDatabase.getCollection(DBNotification.TABLE_NAME);
-//
-//            // поиск непрочитанных уведомлений пользователя в бд
-//            Document query = new Document(DBNotification.NOTIFICATION_USER, user.get_id()).append(
-//                    DBNotification.NOTIFICATION_STATUS, DBNotification.NOTIFICATION_STATUS_UNREAD);
-//
-//            notificationsCollection.find(query).iterator().getAsync(result -> {
-//                if (result.isSuccess()) {
-//                    // сохраняем все уведомления в лист
-//                    MongoCursor<Document> cursor = result.get();
-//
-//                    // пробегаемся по всем уведомлениям
-//                    List<DBNotification> loadedNotifications = new LinkedList<>();
-//                    while (cursor.hasNext())
-//                        loadedNotifications.add(new DBNotification(cursor.next()));
-//
-//                    // передаем получившийся лист в глобальный отслеживаемый
-//                    currentUserNotifications.setValue(loadedNotifications);
-//                }
-//            });
+    override fun httpEditUserDataFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
+                sendToast("Ошибка при сохранении данных пользователя: $status")
         }
     }
 
-    // пометить уведомление прочитанным
-    fun markReadAdminNotification(notificationID: Long) {
-        //        // получаем таблицу уведомлений
-//        MongoCollection<Document> notificationsCollection = mongoDatabase.getCollection(DBNotification.TABLE_NAME);
-//
-//        // Создаем запрос для поиска документа по идентификатору уведомления
-//        Document query = new Document(DBNotification.NOTIFICATION_ID, notificationID);
-//
-//        // Обновление поля
-//        Document update = new Document("$set", new Document(
-//                DBNotification.NOTIFICATION_STATUS, DBNotification.NOTIFICATION_STATUS_BEEN_READ));
-//
-//        // Выполнение обновления
-//        notificationsCollection.updateOne(query, update).getAsync(result -> {
-//            if (result.isSuccess()) {
-//                loadUserNotifications();
-//            } else {
-//                sendToast("Ошибка при обновлении поля");
-//            }
-//        });
+    override fun httpEditUserDataSuccess(user: EntityUser) {
+        sendToast("Данные пользователя успешно сохранены")
+        currentUser.postValue(user)
     }
 
-    // загрузить отправления пользователя
-    fun loadUserExpeditions() {
-        val user = currentUser.value
-        if (user != null) {
-            //            // получаем таблицу отправлений
-//            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
-//
-//            // поиск отправлений пользователя в бд
-//            Document query = new Document(DBExpedition.EXPEDITION_SENDER, user.get_id());
-//
-//            expeditionsCollection.find(query).iterator().getAsync(result -> {
-//                if (result.isSuccess()) {
-//
-//                    // сохраняем все отправления в лист
-//                    MongoCursor<Document> cursor = result.get();
-//
-//                    // пробегаемся по всем посылкам
-//                    List<DBExpedition> loadedData = new ArrayList<>();
-//                    while (cursor.hasNext())
-//                        loadedData.add(new DBExpedition(cursor.next()));
-//
-//                    // передаем получившийся лист в глобальный отслеживаемый
-//                    currentUserExpeditions.setValue(loadedData);
-//                }
-//            });
+
+// -------------------------------------------------------------------------------------------------
+// -------------------------------------- Страничка маршрутов --------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+
+
+    fun loadTrips() {// todo
+
+        viewModelScope.launch {
+            httpClient.loadTrajectoriesByParams()
         }
-    }
 
-    fun createExpedition(expedition: DBExpedition?) {
-        val user = currentUser.value
-        if (user != null) {
-            //            // получаем таблицу отправлений
-//            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
-//
-//            Document expeditionDocument = new Document()
-//                    .append(DBExpedition.EXPEDITION_ADDRESS_RECEIVER, expedition.getAddressReceiver().getDocument())
-//                    .append(DBExpedition.EXPEDITION_ADDRESS_SENDER, expedition.getAddressSender().getDocument())
-//                    .append(DBExpedition.EXPEDITION_STATUS, expedition.getStatus())
-//                    .append(DBExpedition.EXPEDITION_SENDER, user.get_id())
-//                    .append(DBExpedition.EXPEDITION_PACKAGE, expedition.getPackage().toDocument());
-//
-//            // вставка нового пользователя в коллекцию
-//            expeditionsCollection.insertOne(expeditionDocument).getAsync(insertResult -> {
-//                if (insertResult.isSuccess()) {
-//                    sendToast("Отправление успешно создано");
-//
-//                    // и сразу загрузка всего заново
-//                    loadUserExpeditions();
-//
-//                } else {
-//                    sendToast("Ошибка при создании отправления = " + insertResult.getError());
-//                    Log.e("Test", "Ошибка при создании отправления = " + insertResult.getError());
-//                }
-//            });
-        }
-    }
-
-    fun editExpedition(editedExpeditionData: DBExpedition?) {
-        val user = currentUser.value
-        if (user != null) {
-            //            // получаем таблицу отправлений
-//            MongoCollection<Document> expeditionsCollection = mongoDatabase.getCollection(DBExpedition.TABLE_NAME);
-//
-//            // документ редактирования
-//            Document editedDocument = editedExpeditionData.getDocument();
-//
-//
-//            // Обновляем документ пользователя новыми данными
-//            expeditionsCollection.findOneAndReplace(
-//                    new Document(DBExpedition.EXPEDITION_ID, editedExpeditionData.get_id()),
-//                    editedDocument
-//            ).getAsync(result -> {
-//                if (result.isSuccess()) {
-//                    Document updatedDocument = result.get();
-//                    if (updatedDocument != null) {
-//                        // если данные сохранены успешно, обновляем глобальную копию переменной и интерфейс
-//                        loadUserExpeditions();
-//
-//                        sendToast("Данные отправления успешно сохранены");
-//                    } else {
-//                        sendToast("Ошибка, отправление не найдено");
-//                    }
-//                } else {
-//                    sendToast("Ошибка при сохранении данных отправления");
-//                }
-//            });
-        }
-    }
-
-    fun loadTrips() {
         //        // получаем таблицу
 //        MongoCollection<Document> tripsCollection = mongoDatabase.getCollection(DBTrip.TABLE_NAME);
 //
@@ -449,6 +305,130 @@ class MainViewModel(
 //            }
 //        });
     }
+
+
+    override fun httpLoadTrajectoriesFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun httpLoadTrajectoriesSuccess(trips: List<EntityTrip>) {
+        currentLoadedTrips.postValue(trips)
+    }
+
+// -------------------------------------------------------------------------------------------------
+// ------------------------------------- Страничка отправлений -------------------------------------
+// -------------------------------------------------------------------------------------------------
+
+
+    // загрузить отправления пользователя
+    fun loadUserExpeditions() {
+        val token = token.value
+        if (token != null) {
+            // Загружаем отправления пользователя
+            viewModelScope.launch {
+                httpClient.loadUserExpeditions(token)
+            }
+        }
+    }
+
+    // ответ Http загрузчика
+    override fun httpLoadUserExpeditionsFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        TODO("Not yet implemented")
+    }
+
+    // ответ Http загрузчика
+    override fun httpLoadUserExpeditionsSuccess(expeditions: List<EntityExpedition>) {
+        currentUserExpeditions.postValue(expeditions)
+
+    }
+
+    // создание нового отправления
+    fun createExpedition(expedition: EntityExpedition) {
+        val token = token.value
+        if (token != null) {
+            // создание нового отправления
+            viewModelScope.launch {
+                httpClient.createUserExpedition(token, expedition)
+            }
+        }
+    }
+
+
+    // ответ создания
+    override fun httpCreateExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
+                sendToast("Ошибка при создании отправления = $status")
+        }
+    }
+
+    // ответ создания
+    override fun httpCreateExpeditionSuccess(expedition: EntityExpedition) {
+
+        //отладка
+        val tempList = MutableList(currentUserExpeditions.value!!.size + 1) {
+            if (it == currentUserExpeditions.value!!.size)
+                expedition
+            else
+                currentUserExpeditions.value!![it]
+        }
+        currentUserExpeditions.postValue(tempList)
+        //отладка
+
+        sendToast("Отправление успешно создано")
+
+        // loadUserExpeditions()//убрал для отладки
+    }
+
+    // выбираем из разметки отправление которое будет редактироваться (для вывода в диалог)
+    // может передаваться null тогда это будет диалог создания
+    fun selectExpeditionForEdit(editedExpeditionData: EntityExpedition?){
+
+        selectedExpedition.value = editedExpeditionData
+    }
+
+    // Редактируем отправление
+    fun editExpedition(editedExpeditionData: EntityExpedition) {
+
+        val token = token.value
+        if (token != null) {
+            // Редактируем отправление
+            viewModelScope.launch {
+                httpClient.editExpedition(token, editedExpeditionData)
+            }
+        }
+
+
+    }
+
+
+
+    // ответ редактирования
+    override fun httpEditExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
+                sendToast("Ошибка при редактировании отправления = $status")
+        }
+    }
+
+    // ответ редактирования
+    override fun httpEditExpeditionSuccess(expedition: EntityExpedition) {
+        sendToast("Данные сохранены (заработает когда будет сервер expedition.sender=${expedition.sender})")
+        loadUserExpeditions()
+    }
+
 
 
 }

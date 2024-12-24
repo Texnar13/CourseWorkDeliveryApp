@@ -1,23 +1,14 @@
 package com.texnar13.deliveryapp.model.http
 
-import android.util.Log
-import com.texnar13.deliveryapp.model.DBAddress
+import com.texnar13.deliveryapp.model.entities.EntityAddress
+import com.texnar13.deliveryapp.model.entities.EntityExpedition
+import com.texnar13.deliveryapp.model.entities.EntityPackage
+import com.texnar13.deliveryapp.model.entities.EntityTrip
 import com.texnar13.deliveryapp.model.entities.EntityUser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import com.texnar13.deliveryapp.ui.TrajectoriesFragment
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Dispatcher
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.json.JSONObject
-import java.io.IOException
+import java.util.Date
 
 class HttpApi(
         address: String = "192.168.1.66:8080"
@@ -31,6 +22,11 @@ class HttpApi(
             NO_WORK,
             IN_PROCESS
         }
+
+        enum class ErrorCode {
+            TOKEN_EXPIRED,
+            CONNECTION_ERROR
+        }
     }
 
 
@@ -41,22 +37,63 @@ class HttpApi(
 // --------------------------------------------------------
 
 
-    // Интерфейс
-    interface HttpWorkStatusListener {
-        fun onHttpStatusUpdated(state: HttpClientState)
-    }
+    interface HttpResultAndStatusListener {
 
-    // внешний сеттер
-    fun setHttpWorkStatusListener(listener: HttpWorkStatusListener) {
-        statusListener = listener
+        // статус работы (работает или не работает)
+        fun onHttpStatusUpdated(state: HttpClientState)
+
+        // -- Обратная связь для слушателей --
+
+        // создание пользователя
+        fun httpCreateUserFailure(errorCode: ErrorCode, status: String)
+        fun httpCreateUserSuccess(token: String)
+
+        // аутентификация
+        fun httpLoginUserFailure(errorCode: ErrorCode, status: String)
+        fun httpLoginUserSuccess(token: String)
+
+        // получение данных о пользователе
+        fun httpGetUserDataFailure(errorCode: ErrorCode, status: String)
+        fun httpGetUserDataSuccess(user: EntityUser)
+
+        // Редактирование профиля пользователя
+        fun httpEditUserDataFailure(errorCode: ErrorCode, status: String)
+        fun httpEditUserDataSuccess(user: EntityUser)
+
+        // Загрузка отправлений пользователя
+        fun httpLoadUserExpeditionsFailure(errorCode: ErrorCode, status: String)
+        fun httpLoadUserExpeditionsSuccess(expeditions: List<EntityExpedition>)
+
+        // Создание нового отправления
+        fun httpCreateExpeditionFailure(errorCode: ErrorCode, status: String)
+        fun httpCreateExpeditionSuccess(expedition: EntityExpedition)
+
+        // Редактирование старого отправления
+        fun httpEditExpeditionFailure(errorCode: ErrorCode, status: String)
+        fun httpEditExpeditionSuccess(expedition: EntityExpedition)
+
+        // Загрузка списка маршрутов по параметрам
+        fun httpLoadTrajectoriesFailure(errorCode: ErrorCode, status: String)
+        fun httpLoadTrajectoriesSuccess(trips: List<EntityTrip>)
+
+        // ..
+
     }
 
     // внутренняя ссылка на слушатель
-    private var statusListener: HttpWorkStatusListener? = null
+    private var httpResultAndStatusListener: HttpResultAndStatusListener? = null
 
-    private fun updateStatus(state: HttpClientState) {
-        statusListener?.onHttpStatusUpdated(state)
+    // внешний сеттер
+    fun setHttpResultListener(listener: HttpResultAndStatusListener) {
+        this.httpResultAndStatusListener = listener
     }
+
+
+    // отправка статуса
+    private fun updateStatus(state: HttpClientState) {
+        httpResultAndStatusListener?.onHttpStatusUpdated(state)
+    }
+
 
 // --------------------------------------------------------
 // ---------------- Внутренние переменные -----------------
@@ -73,7 +110,7 @@ class HttpApi(
 // --------------------------------------------------------
 
     // POST запрос создания нового пользователя
-    fun createNewUser(
+    suspend fun createNewUser(
             email: String,
             password: String,
             confirmPassword: String,
@@ -82,7 +119,7 @@ class HttpApi(
             phone: String
     ) {
         // test
-        httpResultListener?.httpCreateUserSuccess("token")
+        httpResultAndStatusListener?.httpCreateUserSuccess("token")
 
 
 // todo работает
@@ -108,7 +145,7 @@ class HttpApi(
 //        client.newCall(request).enqueue(object : Callback {
 //            override fun onFailure(call: Call, e: IOException) {
 //                // Обработка ошибки подключения
-//                httpResultListener?.httpCreateUserFailure(
+//                httpResultAndStatusListener?.httpCreateUserFailure(
 //                        "Ошибка подключения: ${e.message}"
 //                )
 //            }
@@ -117,14 +154,14 @@ class HttpApi(
 //                // Обработка ответа сервера
 //                response.use {
 //                    if (!it.isSuccessful) {
-//                        httpResultListener?.httpCreateUserFailure(
+//                        httpResultAndStatusListener?.httpCreateUserFailure(
 //                                "Ошибка сервера: ${it.code}"
 //                        )
 //                    } else {
 //
 //                        // если пришел ответ с пустым телом
 //                        if (it.body == null) {
-//                            httpResultListener?.httpCreateUserFailure(
+//                            httpResultAndStatusListener?.httpCreateUserFailure(
 //                                    "Пустой ответ"
 //                            )
 //                        } else {
@@ -138,13 +175,13 @@ class HttpApi(
 //
 //                            // Если получили HTTP ошибку
 //                            if (jsonResponse.has("error")) {
-//                                httpResultListener?.httpCreateUserFailure("Ошибка: code=" +
+//                                httpResultAndStatusListener?.httpCreateUserFailure("Ошибка: code=" +
 //                                        jsonResponse.getString("code") +
 //                                        "error=" +
 //                                        jsonResponse.getString("error")
 //                                )
 //                            } else {
-//                                httpResultListener?.httpCreateUserSuccess(
+//                                httpResultAndStatusListener?.httpCreateUserSuccess(
 //                                        jsonResponse.getString("token")
 //                                )
 //                            }
@@ -166,9 +203,9 @@ class HttpApi(
 
         "$serverAddress/login_user"
         delay(1500)
-        httpResultListener?.httpLoginUserSuccess("success 123")
-        // httpResultListener?.httpLoginUserFailure(status: String)
-        // httpResultListener?.httpLoginUserSuccess(token: String)
+        httpResultAndStatusListener?.httpLoginUserSuccess("success 123")
+        // httpResultAndStatusListener?.httpLoginUserFailure(status: String)
+        // httpResultAndStatusListener?.httpLoginUserSuccess(token: String)
 
     }
 
@@ -180,59 +217,206 @@ class HttpApi(
 
 
         delay(1500)
-        httpResultListener?.httpGetUserDataSuccess(
+        httpResultAndStatusListener?.httpGetUserDataSuccess(
                 EntityUser(
                         "1234L",
                         "password",
-                        DBAddress(
-                                arrayOf("Россия",
-                                        "Бобруйск",
-                                        "ул. Раковая",
-                                        "полуторка"
-                                )
+                        EntityAddress(
+                                "Россия",
+                                "Бобруйск",
+                                "ул. Левая",
+                                "полуторка"
                         ),
                         "email",
-                        "Тот самый человек яйца",
-                        "88005553535",
+                        "Ivan M",
+                        "+78005553535",
                         5.4
                 )
 
         )
-        //httpResultListener?.httpGetUserDataFailure(status: String)
-        //httpResultListener?.httpGetUserDataSuccess(user: EntityUser)
+        //httpResultAndStatusListener?.httpGetUserDataFailure(status: String)
+        //httpResultAndStatusListener?.httpGetUserDataSuccess(user: EntityUser)
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    // редактирование пользователя
+    suspend fun editUserData(editedUserData: EntityUser) {
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+//        httpResultAndStatusListener?.httpEditUserDataSuccess(editedUserData)
+
+
+        httpResultAndStatusListener?.httpEditUserDataFailure(ErrorCode.TOKEN_EXPIRED, "Пипец")
+        // httpResultAndStatusListener?.httpEditUserDataSuccess(editedUserData)
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    // Загружаем отправления пользователя
+    suspend fun loadUserExpeditions(token: String) {
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+
+        val expeditions = listOf(
+                EntityExpedition(
+                        0,
+                        EntityAddress(
+                                "Россия",
+                                "Бобруйск",
+                                "ул. Левая",
+                                "полуторка"
+                        ),
+                        EntityAddress(
+                                "Россия2",
+                                "Бобруйск2",
+                                "ул. Левая2",
+                                "полуторка2"
+                        ),
+                        status = EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
+                        0L,
+                        EntityPackage(
+                                category = "Категория1",
+                                description = "Большое-при большое, длинное-при длинное описание",
+                                dimensions = arrayOf(10.0F, 20.0F, 12.0F),
+                                weight = 0.1F,
+                                name = "Супер пупер посылка",
+                                picture = "Э img?"
+
+                        )
+                ),
+                EntityExpedition(
+                        1,
+                        EntityAddress(
+                                "Россия1",
+                                "Бобруйск2",
+                                "ул. Левая3",
+                                "полуторка4"
+                        ),
+                        EntityAddress(
+                                "Россия2",
+                                "Бобруйск2",
+                                "ул. Левая2",
+                                "полуторка2"
+                        ),
+                        status = EntityExpedition.Companion.ExpeditionStatus.SENT,
+                        0L,
+                        EntityPackage(
+                                category = "Категория2",
+                                description = "Большое-при большое, длинное-при длинное описание",
+                                dimensions = arrayOf(10.0F, 20.0F, 12.0F),
+                                weight = 0.1F,
+                                name = "Супер пупер посылка2",
+                                picture = "Э img?"
+
+                        )
+                ),
+                EntityExpedition(
+                        2,
+                        EntityAddress(
+                                "Россия1",
+                                "Бобруйск2",
+                                "ул. Левая3",
+                                "полуторка4"
+                        ),
+                        EntityAddress(
+                                "Россия2",
+                                "Бобруйск2",
+                                "ул. Левая2",
+                                "полуторка2"
+                        ),
+                        status = EntityExpedition.Companion.ExpeditionStatus.DONE,
+                        0L,
+                        EntityPackage(
+                                category = "Категория2",
+                                description = "Большое-при большое, длинное-при длинное описание",
+                                dimensions = arrayOf(10.0F, 20.0F, 12.0F),
+                                weight = 0.1F,
+                                name = "Супер пупер посылка2",
+                                picture = "Э img?"
+
+                        )
+                )
+        )
+
+        httpResultAndStatusListener?.httpLoadUserExpeditionsSuccess(expeditions)
+//        httpResultAndStatusListener?.httpLoadUserExpeditionsFailure(errorCode, status)
+//        httpResultAndStatusListener?.httpLoadUserExpeditionsSuccess(expeditions)
+
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    // создание нового отправления
+    suspend fun createUserExpedition(token: String, expedition: EntityExpedition) {
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+
+
+        // Создание нового отправления
+        //httpResultAndStatusListener?.httpCreateExpeditionFailure(errorCode: ErrorCode, status: String)
+        httpResultAndStatusListener?.httpCreateExpeditionSuccess(expedition)
+
 
         // Выставляем статус
         updateStatus(HttpClientState.NO_WORK)
     }
 
 
-// --------------------------------- Обратная связь для слушателей ---------------------------------
+    suspend fun editExpedition(token: String, expedition: EntityExpedition){
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
 
 
-    private var httpResultListener: HttpResultListener? = null
+//        // Редактирование старого отправления
+//        httpResultAndStatusListener?.httpEditExpeditionFailure(errorCode: ErrorCode, status: String)
+        httpResultAndStatusListener?.httpEditExpeditionSuccess(expedition)
 
-    fun setHttpResultListener(listener: HttpResultListener) {
-        this.httpResultListener = listener
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
     }
 
-    interface HttpResultListener {
 
-        // создание пользователя
-        fun httpCreateUserFailure(status: String)
-        fun httpCreateUserSuccess(token: String)
+    // Загрузка списка маршрутов по параметрам
+    suspend fun loadTrajectoriesByParams(){
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
 
-        // аутентификация
-        fun httpLoginUserFailure(status: String)
-        fun httpLoginUserSuccess(token: String)
+        delay(1500)
 
-        // получение данных о пользователе
-        fun httpGetUserDataFailure(status: String)
-        fun httpGetUserDataSuccess(user: EntityUser)
+        httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(
+                listOf(
+                        EntityTrip(
+                                0,
+                                "100$",
+                                "Russia",
+                                "Moscow",
+                                "Russia",
+                                "Vladivostok",
+                                Date(),
+                                3F
+                        )
+                )
+        )
 
-        // ..
+//        httpResultAndStatusListener?.httpLoadTrajectoriesFailure(errorCode: ErrorCode, status: String)
+//        httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories: List<EntityTrip>)
 
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
     }
-
 
 }
 

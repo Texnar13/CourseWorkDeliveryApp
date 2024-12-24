@@ -3,8 +3,6 @@ package com.texnar13.deliveryapp
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -14,19 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
-import androidx.navigation.NavDestination
-import androidx.navigation.Navigation.findNavController
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.texnar13.deliveryapp.model.DBUser
 import com.texnar13.deliveryapp.model.http.HttpApi
-import com.texnar13.deliveryapp.ui.login.LoginFragmentInterface
 import com.texnar13.deliveryapp.view_model.MainViewModel
-import com.texnar13.deliveryapp.view_model.MainViewModelFactory
 import java.util.Objects
 
 class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
@@ -47,7 +38,6 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
     var currentState: FState = FState.LOGIN_FRAGMENT
 
 
-    // TODO УБРАТЬ ВО FRAGMENT
     // блоировка нажатий на экран и прогресс бар, когда идет загрузка данных
     private var loadScreenBlocking: View? = null
     private var isNowOutedLoadScreen: Boolean = false
@@ -68,11 +58,12 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
 
 
         // Привязываем отображение загрузки к сотоянию отправщика
-        viewModel.httpLoadingStatus.observe(this){ state ->
-            when(state){
+        viewModel.httpLoadingStatus.observe(this) { state ->
+            when (state) {
                 HttpApi.Companion.HttpClientState.NO_WORK -> {
                     disableLoadBar()
                 }
+
                 HttpApi.Companion.HttpClientState.IN_PROCESS -> {
                     enableLoadBar()
                 }
@@ -80,56 +71,17 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
         }
 
 
-
-
-        // отслеживаем состояние подключения
-//        viewModel.activityConnectionStatus.observe(viewLifecycleOwner) { status ->
-//            when (status) {
-//                MainViewModel.ConnectionStatusValue.STATUS_NONE -> {
-//
-//                    // Включаем отображение загрузки
-//                    (requireActivity() as LoaderAndBottomPanel).enableLoadBar()
-//                    internetConnected = false
-//                }
-//
-//                MainViewModel.ConnectionStatusValue.STATUS_ERROR -> {
-//                    Toast.makeText(
-//                            context,
-//                            "Нет соединения с сервером...",
-//                            Toast.LENGTH_SHORT
-//                    ).show()
-//
-//                    internetConnected = false
-//                }
-//
-//                MainViewModel.ConnectionStatusValue.STATUS_CONNECTED -> {
-//        Log.e("Hello", "loaded")
-//        internetConnected = true
-//        loginContainer.visibility = View.VISIBLE
-//        registerButton.visibility = View.VISIBLE
-//
-//        (requireActivity() as LoaderAndBottomPanel).disableLoadBar()
-//
-//        Toast.makeText(context, "Соединение с сервером установлено", Toast.LENGTH_SHORT).show()
-//                }
-//
-//                null -> {}
-//            }
-//        }
-
-
-
-
-
-        // TODO УБРАТЬ ВО FRAGMENT ПОСТЕПЕННО
-        // отслеживаем авторизацию и состояние текущего пользователя
-        viewModel.currentUser.observe(this) { user ->
-            // если пользователь получен из базы
-            if (user == null) {
-//                // переход на страницу входа через backstack// TODO
-//                myBackCallback.isEnabled = false
-//                onBackPressedDispatcher.onBackPressed()
-//                myBackCallback.isEnabled = true
+        // отслеживаем авторизацию и состояниt токена
+        viewModel.token.observe(this) { user ->
+            // если пользователя нет
+            if (user == null &&
+                    (currentState != FState.LOGIN_FRAGMENT &&
+                            currentState != FState.REGISTER_FRAGMENT)
+            ) {
+                // переход на страницу входа через backstack
+                myBackCallback.isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                myBackCallback.isEnabled = true
             }
         }
 
@@ -180,7 +132,6 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
                     showBottomNavigation()
                 }
             }
-            Log.d("Hello", "currentState = " + currentState.name)
         }
         // связываем меню навигации и контроллер (он будет работать по id пунктов меню)
         setupWithNavController(bottomNavigationView!!, navController!!)
@@ -199,7 +150,6 @@ class MainActivity : AppCompatActivity(), LoaderAndBottomPanel {
     }
 
 
-    // TODO УБРАТЬ В NAVIGATION?
     // Обработка нажатия кнопки назад
     private var myBackCallback: OnBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {

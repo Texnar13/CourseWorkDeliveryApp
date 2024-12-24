@@ -44,7 +44,7 @@
     <!-- Главное меню -->
     <fragment
         android:id="@+id/fragment_user"
-        android:name="com.texnar13.deliveryapp.ui.UserFragment"
+        android:name="com.texnar13.deliveryapp.ui.user.UserFragment"
         android:label="fragment_main"
         tools:layout="@layout/fragment_user">
         <!--action
@@ -66,5 +66,10 @@
         android:id="@+id/fragment_expeditions"
         android:name="com.texnar13.deliveryapp.ui.expeditions.ExpeditionsFragment"
         android:label="fragment_expeditions"
-        tools:layout="@layout/fragment_expeditions" />
+        tools:layout="@layout/fragment_expeditions" >
+        <action
+            app:restoreState="true"
+            android:id="@+id/action_fragment_expeditions_to_fragment_trajectories"
+            app:destination="@id/fragment_trajectories" />
+    </fragment>
 </navigation>

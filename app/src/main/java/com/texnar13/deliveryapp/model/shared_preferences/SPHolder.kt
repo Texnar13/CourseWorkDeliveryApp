@@ -31,8 +31,8 @@ class SPHolder(
 
     fun getUserLastAuth(): Array<String> {
         return arrayOf(
-                preferences.getString(AUTH_LOGIN, "hello_world@mail.com")!!,
-                preferences.getString(AUTH_PASSWORD, "12345678")!!
+                preferences.getString(AUTH_LOGIN, "")!!,
+                preferences.getString(AUTH_PASSWORD, "")!!
         )
     }
 
