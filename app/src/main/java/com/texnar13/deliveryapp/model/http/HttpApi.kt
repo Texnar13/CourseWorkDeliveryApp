@@ -5,7 +5,6 @@ import com.texnar13.deliveryapp.model.entities.EntityExpedition
 import com.texnar13.deliveryapp.model.entities.EntityPackage
 import com.texnar13.deliveryapp.model.entities.EntityTrip
 import com.texnar13.deliveryapp.model.entities.EntityUser
-import com.texnar13.deliveryapp.ui.TrajectoriesFragment
 import kotlinx.coroutines.delay
 import okhttp3.OkHttpClient
 import java.util.Date
@@ -75,6 +74,14 @@ class HttpApi(
         // Загрузка списка маршрутов по параметрам
         fun httpLoadTrajectoriesFailure(errorCode: ErrorCode, status: String)
         fun httpLoadTrajectoriesSuccess(trips: List<EntityTrip>)
+
+        // посмотреть данные отправления и маршрута
+        fun loadTrajectoryDataForExpeditionFailure(errorCode: ErrorCode, status: String)
+        fun loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityTrip)
+
+        // в "Сделать заявку" была выбрана посылка
+        fun selectPackageDeliveryTripFailure()
+        fun selectPackageDeliveryTripSuccess()
 
         // ..
 
@@ -372,7 +379,7 @@ class HttpApi(
     }
 
 
-    suspend fun editExpedition(token: String, expedition: EntityExpedition){
+    suspend fun editExpedition(token: String, expedition: EntityExpedition) {
         // Выставляем статус
         updateStatus(HttpClientState.IN_PROCESS)
 
@@ -390,7 +397,7 @@ class HttpApi(
 
 
     // Загрузка списка маршрутов по параметрам
-    suspend fun loadTrajectoriesByParams(){
+    suspend fun loadTrajectoriesByParams() {
         // Выставляем статус
         updateStatus(HttpClientState.IN_PROCESS)
 
@@ -413,6 +420,47 @@ class HttpApi(
 
 //        httpResultAndStatusListener?.httpLoadTrajectoriesFailure(errorCode: ErrorCode, status: String)
 //        httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories: List<EntityTrip>)
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    // посмотреть данные отправления и маршрута
+    suspend fun loadTrajectoryDataForExpedition(token: String, expedition: EntityExpedition) {
+
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(EntityTrip(
+                0,
+                "100$",
+                "Russia",
+                "Moscow",
+                expedition.addressSender.getCountry(),
+                expedition.addressSender.getCity(),
+                Date(),
+                3F
+        ))
+
+        // посмотреть данные отправления и маршрута
+//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(errorCode: ErrorCode, status: String)
+//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityExpedition)
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    // в "Сделать заявку" была выбрана посылка
+    suspend fun selectPackageDeliveryTrip(token: String, expedition: EntityExpedition, value: EntityTrip) {
+
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+
+        //httpResultAndStatusListener?.selectPackageDeliveryTripFailure()
+        httpResultAndStatusListener?.selectPackageDeliveryTripSuccess()
 
         // Выставляем статус
         updateStatus(HttpClientState.NO_WORK)

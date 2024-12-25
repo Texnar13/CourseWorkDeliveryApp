@@ -17,4 +17,17 @@ class EntityAddress(
     fun getString():String{
         return "${address[0]}, ${address[1]}, ${address[2]}, ${address[3]}"
     }
+
+    fun getCountry():String{
+        return address[0]
+    }
+    fun getCity():String{
+        return address[1]
+    }
+    fun getStreet():String{
+        return address[2]
+    }
+    fun getHouse():String{
+        return address[3]
+    }
 }

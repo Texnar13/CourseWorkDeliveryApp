@@ -44,9 +44,9 @@ public class RegisterFragment extends Fragment {
 
 
         // отслеживаем авторизацию и состояние текущего пользователя
-        viewModel.getCurrentUser().observe(getViewLifecycleOwner(), user -> {
+        viewModel.getToken().observe(getViewLifecycleOwner(), token -> {
             // если пользователь получен из базы
-            if (user != null) {
+            if (token != null) {
                 // переход на страницу пользователя
                 Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).navigate(
                         R.id.action_registerFragment_to_mainFragment
@@ -105,7 +105,7 @@ public class RegisterFragment extends Fragment {
 
                 if (addressesArray.length != 4) {
                     isCorrect = false;
-                    addressField.setError("Ночь, Улица, Фонарь, Аптека");
+                    addressField.setError("Страна, Город, Улица, Дом");
                 } else {
 
                     // проверка каждого отдельного слова

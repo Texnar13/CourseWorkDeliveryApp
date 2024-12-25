@@ -193,12 +193,12 @@ class ExpeditionEditDialogFragment : DialogFragment() {
 
             // нехватает полей
             if (addressesArray.size != 4) {
-                inputLayout.error = "Ночь, Улица, Фонарь, Аптека"
+                inputLayout.error = "Страна, Город, Улица, Дом"
                 return false
             } else {
                 // проверка каждого отдельного слова
                 for (s in addressesArray) if (s.isEmpty()) {
-                    inputLayout.error = "Ночь, Улица, Фонарь, Аптека"
+                    inputLayout.error = "Страна, Город, Улица, Дом"
                     return false
                 }
             }

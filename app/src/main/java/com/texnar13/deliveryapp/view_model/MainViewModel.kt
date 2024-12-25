@@ -75,7 +75,7 @@ class MainViewModel(
     var currentUser: MutableLiveData<EntityUser?> = MutableLiveData(null)
 
     // посылки пользователя
-    val currentUserExpeditions: MutableLiveData<List<EntityExpedition>> = MutableLiveData()
+    val currentUserExpeditions: MutableLiveData<List<EntityExpedition>?> = MutableLiveData(null)
 
     val selectedExpedition: MutableLiveData<EntityExpedition?> = MutableLiveData(null)
 
@@ -315,6 +315,7 @@ class MainViewModel(
         currentLoadedTrips.postValue(trips)
     }
 
+
 // -------------------------------------------------------------------------------------------------
 // ------------------------------------- Страничка отправлений -------------------------------------
 // -------------------------------------------------------------------------------------------------
@@ -322,6 +323,9 @@ class MainViewModel(
 
     // загрузить отправления пользователя
     fun loadUserExpeditions() {
+        // обнуляем
+        currentUserExpeditions.value = null
+
         val token = token.value
         if (token != null) {
             // Загружаем отправления пользователя
@@ -395,7 +399,6 @@ class MainViewModel(
 
     // Редактируем отправление
     fun editExpedition(editedExpeditionData: EntityExpedition) {
-
         val token = token.value
         if (token != null) {
             // Редактируем отправление
@@ -403,11 +406,7 @@ class MainViewModel(
                 httpClient.editExpedition(token, editedExpeditionData)
             }
         }
-
-
     }
-
-
 
     // ответ редактирования
     override fun httpEditExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
@@ -427,6 +426,65 @@ class MainViewModel(
     override fun httpEditExpeditionSuccess(expedition: EntityExpedition) {
         sendToast("Данные сохранены (заработает когда будет сервер expedition.sender=${expedition.sender})")
         loadUserExpeditions()
+    }
+
+
+    val trajectoryAndExpeditionData = MutableLiveData<EntityTrip?>(null)
+
+    // Для функции "посмотреть маршрут"
+    fun loadTrajectoryDataForExpedition(expedition: EntityExpedition){
+        val token = token.value
+        if (token != null) {
+            // Редактируем отправление
+            viewModelScope.launch {
+                httpClient.loadTrajectoryDataForExpedition(token, expedition)
+            }
+        }
+    }
+
+    // ответ "посмотреть маршрут"
+    override fun loadTrajectoryDataForExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        TODO("Not yet implemented")
+    }
+
+    // ответ "посмотреть маршрут"
+    override fun loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityTrip) {
+        trajectoryAndExpeditionData.postValue(trajectoryAndExpedition)
+    }
+
+//--------------------------------------------------------------
+
+    val selectedTrip = MutableLiveData<EntityTrip?>(null)
+
+    // "Сделать заявку" сопрячь
+    fun selectTripForEdit(tripUnit: EntityTrip) {
+
+        // Ставим поездку выбранной
+        selectedTrip.value = tripUnit
+
+        // Запускаем загрузку отправлений пользователя
+        loadUserExpeditions()
+
+    }
+
+    // в "Сделать заявку" была выбрана посылка
+    fun selectPackageDeliveryTrip(expedition: EntityExpedition) {
+        val token = token.value
+        if (token != null && selectedTrip.value != null) {
+            // Редактируем отправление
+            viewModelScope.launch {
+                httpClient.selectPackageDeliveryTrip(token, expedition, selectedTrip.value!!)
+            }
+        }
+
+    }
+
+    override fun selectPackageDeliveryTripFailure() {
+        TODO("Not yet implemented")
+    }
+
+    override fun selectPackageDeliveryTripSuccess() {
+        sendToast("API говорит ДА...")
     }
 
 

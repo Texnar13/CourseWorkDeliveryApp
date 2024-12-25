@@ -59,8 +59,7 @@ class UserFragment : Fragment() {
                 }
 
                 userDescription.text = String.format(Locale.getDefault(),
-                        "Рейтинг %.1f/5\nЭл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
-                        dbUser.rating,
+                        "Эл. Почта %s\nЯ из %s\nИмя %s\nТелефон %s",
                         dbUser.email,
                         address,
                         dbUser.name,

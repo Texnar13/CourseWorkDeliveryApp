@@ -1,4 +1,4 @@
-package com.texnar13.deliveryapp.ui
+package com.texnar13.deliveryapp.ui.trips
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.textfield.TextInputLayout
 import com.texnar13.deliveryapp.R
 import com.texnar13.deliveryapp.model.entities.EntityTrip
+import com.texnar13.deliveryapp.ui.trips.dialogs.SelectPackageDialog
 import com.texnar13.deliveryapp.view_model.MainViewModel
 import java.lang.String
 import java.util.Locale
@@ -36,12 +37,6 @@ class TrajectoriesFragment  // Required empty public constructor
         val textViewDepartDate = rootView.findViewById<TextInputLayout>(R.id.fragment_trajectories_search_depart_date).editText!!
         val textViewFreeWeight = rootView.findViewById<TextInputLayout>(R.id.fragment_trajectories_search_free_weight).editText!!
         val searchButton = rootView.findViewById<Button>(R.id.fragment_trajectories_search_button)
-
-
-
-
-
-
 
 
         // контейнер trip
@@ -71,7 +66,7 @@ class TrajectoriesFragment  // Required empty public constructor
         mainViewModel.currentLoadedTrips.observe(viewLifecycleOwner) { trips ->
 
             // вывод списка
-            outList(trips, boxesContainer)
+            outList(trips, boxesContainer, mainViewModel)
         }
 
 
@@ -85,7 +80,7 @@ class TrajectoriesFragment  // Required empty public constructor
 
 
     // вывод списка
-    private fun outList(trips: List<EntityTrip>, outputContainer: LinearLayout){
+    private fun outList(trips: List<EntityTrip>, outputContainer: LinearLayout, mainViewModel: MainViewModel) {
         outputContainer.removeAllViews()
 
         // проходимся по всем отправлениям
@@ -113,6 +108,14 @@ class TrajectoriesFragment  // Required empty public constructor
                     tripUnit.receivingCity,
                     tripUnit.availableWeight
             )
+
+
+            joinButton.setOnClickListener {
+                // выбираем какой будем использовать маршрут
+                mainViewModel.selectTripForEdit(tripUnit)
+                // запускаем диалог
+                SelectPackageDialog().show(parentFragmentManager, "SelectPackageDialog")
+            }
 
 
             val layoutParams = LinearLayout.LayoutParams(

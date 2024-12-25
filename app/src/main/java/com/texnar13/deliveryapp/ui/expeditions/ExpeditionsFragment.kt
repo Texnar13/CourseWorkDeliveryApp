@@ -12,6 +12,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.texnar13.deliveryapp.R
 import com.texnar13.deliveryapp.model.entities.EntityExpedition
 import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionEditDialogFragment
+import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionTrajectoryInfoDialog
 import com.texnar13.deliveryapp.view_model.MainViewModel
 import java.util.Locale
 
@@ -45,19 +46,18 @@ class ExpeditionsFragment : Fragment() {
         mainViewModel.loadUserExpeditions()
 
         // Подписываемся на список отправлений
-        mainViewModel.currentUserExpeditions.observe(viewLifecycleOwner) { dbExpeditions: List<EntityExpedition> ->
+        mainViewModel.currentUserExpeditions.observe(viewLifecycleOwner) { dbExpeditions ->
+            if (dbExpeditions != null) {
 
-            // вывод списка
-            listOut(
-                    boxesContainer,
-                    dbExpeditions
-            )
+                // вывод списка
+                listOut(
+                        boxesContainer,
+                        dbExpeditions
+                )
+            }
         }
         return rootView
     }
-
-
-    надо убрать кнопки при статусе отправлено
 
     // вывод списка
     private fun listOut(outContainer: LinearLayout, expeditionsList: List<EntityExpedition>) {
@@ -103,7 +103,7 @@ class ExpeditionsFragment : Fragment() {
             when (expeditionUnit.status) {
                 EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND -> {
                     // выставляем статус
-                    state.text = "Ожидает отправки"
+                    state.text = "НЕ ОТПРАВЛЕНО"
                     state.setTextColor(resources.getColor(R.color.wait_mail_text_color))
 
                     // кнопки
@@ -124,20 +124,17 @@ class ExpeditionsFragment : Fragment() {
                     state.setTextColor(resources.getColor(R.color.sent_mail_text_color))
 
                     // кнопки
-                    buttonEdit.setOnClickListener {
-                        // редактирование отправления
-                        editExpedition(expeditionUnit)
-                    }
+                    buttonEdit.visibility = View.INVISIBLE
                     buttonFindSomebody.visibility = View.INVISIBLE
                     buttonConnect.setOnClickListener {
-                        // поиск маршрута
-                        gotoFindTrajectory(expeditionUnit)
+                        // вывод информации о маршруте
+                        showTrajectoryInfo(expeditionUnit)
                     }
                 }
 
                 EntityExpedition.Companion.ExpeditionStatus.DONE -> {
                     // выставляем статус
-                    state.text = "Завершено"
+                    state.text = "ЗАВЕРШЕНО"
                     state.setTextColor(resources.getColor(R.color.ended_mail_text_color))
 
                     // кнопки
@@ -185,6 +182,17 @@ class ExpeditionsFragment : Fragment() {
 //                R.id.action_fragment_expeditions_to_fragment_trajectories
 //        )
 
+    }
+
+    // вывести информацию о маршруте и посылке
+    private fun showTrajectoryInfo(expedition: EntityExpedition) {
+
+        // Ставим во ViewModel обьект как выбранный
+        MainViewModel.getViewModel(requireActivity()).loadTrajectoryDataForExpedition(expedition)
+
+        // вызов диалога
+        ExpeditionTrajectoryInfoDialog()
+                .show(parentFragmentManager, "ExpeditionTrajectoryInfoDialog")
     }
 
 

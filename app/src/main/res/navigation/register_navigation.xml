@@ -58,7 +58,7 @@
 
     <fragment
         android:id="@+id/fragment_trajectories"
-        android:name="com.texnar13.deliveryapp.ui.TrajectoriesFragment"
+        android:name="com.texnar13.deliveryapp.ui.trips.TrajectoriesFragment"
         android:label="fragment_trajectories"
         tools:layout="@layout/fragment_trajectories" />
 
