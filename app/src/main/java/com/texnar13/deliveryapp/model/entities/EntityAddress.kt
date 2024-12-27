@@ -4,7 +4,6 @@ import java.io.Serializable
 
 class EntityAddress(
         val address: Array<String>
-
 ) : Serializable {
 
     constructor(
@@ -24,10 +23,10 @@ class EntityAddress(
     fun getCity():String{
         return address[1]
     }
-    fun getStreet():String{
+    fun getDistrict():String{
         return address[2]
     }
-    fun getHouse():String{
+    fun getStreet():String{
         return address[3]
     }
 }

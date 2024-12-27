@@ -25,16 +25,12 @@ public class MainViewModelFactory implements ViewModelProvider.Factory {
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
 
-        // инициализация бд
-        //Realm.init(context);
-
-        // получение строки с апи ключом
-        //String apiKey = context.getResources().getString(R.string.mongodb_api_key);
+        // хранилище данных
+        SPHolder holder = new SPHolder(context);
 
         return (T) (new MainViewModel(
-                new HttpApi(),
-                new SPHolder(context)
+                new HttpApi(holder.getServerAddress()),
+                holder
                 ));
-        //return ViewModelProvider.Factory.super.create(modelClass);
     }
 }

@@ -178,9 +178,6 @@ class ExpeditionsFragment : Fragment() {
         val bottomNavigationView: BottomNavigationView = requireActivity().findViewById(R.id.activity_main_bottom_navigation)
         bottomNavigationView.selectedItemId = R.id.fragment_trajectories
 
-//        Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).navigate(
-//                R.id.action_fragment_expeditions_to_fragment_trajectories
-//        )
 
     }
 

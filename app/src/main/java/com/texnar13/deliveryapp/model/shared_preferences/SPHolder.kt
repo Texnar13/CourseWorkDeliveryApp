@@ -15,6 +15,9 @@ class SPHolder(
         // Аутентификация
         private const val AUTH_LOGIN = "AUTH_LOGIN"
         private const val AUTH_PASSWORD = "AUTH_PASSWORD"
+
+        // Адрес сервера
+        private const val SERVER_ADDRESS = "SERVER_ADDRESS"
     }
 
     private val preferences: SharedPreferences =
@@ -31,9 +34,21 @@ class SPHolder(
 
     fun getUserLastAuth(): Array<String> {
         return arrayOf(
-                preferences.getString(AUTH_LOGIN, "")!!,
-                preferences.getString(AUTH_PASSWORD, "")!!
+            preferences.getString(AUTH_LOGIN, "")!!,
+            preferences.getString(AUTH_PASSWORD, "")!!
         )
+    }
+
+// ------------------------------------ Адрес сервера ------------------------------------
+
+    fun setServerAddress(address: String) {
+        val editor = preferences.edit()
+        editor.putString(SERVER_ADDRESS, address)
+        editor.apply()
+    }
+
+    fun getServerAddress(): String {
+        return preferences.getString(SERVER_ADDRESS, "192.168.1.66:8080")!!
     }
 
 

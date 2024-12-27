@@ -38,20 +38,29 @@ class ExpeditionEditDialogFragment : DialogFragment() {
         builder.setView(dialogLayout)
 
         // инициализация разметки
-        val titleText = dialogLayout.findViewById<TextView>(R.id.fragment_dialog_edit_expeditions_title)
+        val titleText =
+            dialogLayout.findViewById<TextView>(R.id.fragment_dialog_edit_expeditions_title)
         val idText = dialogLayout.findViewById<TextView>(R.id.fragment_dialog_edit_expeditions_id)
 
-        senderAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_sender_address)
-        receiverAddressField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_receiver_address)
+        senderAddressField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_sender_address)
+        receiverAddressField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_receiver_address)
         boxNameField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_name)
-        boxCategoryField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_category)
-        boxDescriptionField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_description)
-        boxDimensField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_dimens)
-        boxWeightField = dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_weight)
+        boxCategoryField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_category)
+        boxDescriptionField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_description)
+        boxDimensField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_dimens)
+        boxWeightField =
+            dialogLayout.findViewById(R.id.fragment_dialog_edit_expeditions_input_weight)
 
-        val cancelButton = dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_cancel_button)
+        val cancelButton =
+            dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_cancel_button)
         cancelButton.setOnClickListener { dismiss() }
-        val saveButton = dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_save_button)
+        val saveButton =
+            dialogLayout.findViewById<Button>(R.id.fragment_dialog_edit_expeditions_save_button)
 
 
         // -------- получаем данные из viewModel --------
@@ -87,53 +96,56 @@ class ExpeditionEditDialogFragment : DialogFragment() {
                 // разбиваем по запятым
 
                 val senderAddressesArray =
-                        senderAddressField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                for (i in senderAddressesArray.indices) senderAddressesArray[i] = senderAddressesArray[i].trim { it <= ' ' }
+                    senderAddressField.getEditText()!!.text.toString().trim { it <= ' ' }
+                        .split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                for (i in senderAddressesArray.indices) senderAddressesArray[i] =
+                    senderAddressesArray[i].trim { it <= ' ' }
 
                 val receiverAddressesArray =
-                        receiverAddressField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                for (i in receiverAddressesArray.indices) receiverAddressesArray[i] = receiverAddressesArray[i].trim { it <= ' ' }
+                    receiverAddressField.getEditText()!!.text.toString().trim { it <= ' ' }
+                        .split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                for (i in receiverAddressesArray.indices) receiverAddressesArray[i] =
+                    receiverAddressesArray[i].trim { it <= ' ' }
 
-                val dimensStringArray = boxDimensField.getEditText()!!.text.toString().trim { it <= ' ' }.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                val dimensArray = Array(dimensStringArray.size) { pos -> dimensStringArray[pos].trim().toFloat() }
+                val dimensStringArray =
+                    boxDimensField.getEditText()!!.text.toString().trim { it <= ' ' }
+                        .split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                val dimensArray =
+                    Array(dimensStringArray.size) { pos -> dimensStringArray[pos].trim().toFloat() }
 
-                val mainViewModel = ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
+                val mainViewModel =
+                    ViewModelProvider(requireActivity()).get(MainViewModel::class.java)
 
                 // если это создание нового
                 if (expedition == null) {
-                    mainViewModel.createExpedition(EntityExpedition(
-                            0,
-                            EntityAddress(receiverAddressesArray),
-                            EntityAddress(senderAddressesArray),
-                            EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
-                            12,
-                            EntityPackage(
-                                    boxCategoryField.editText!!.text.toString(),
-                                    boxDescriptionField.editText!!.text.toString(),
-                                    dimensArray,
-                                    boxWeightField.editText!!.text.toString().toFloat(),
-                                    boxNameField.editText!!.text.toString(),
-                                    "URL"
-                            )
-                    ))
+                    mainViewModel.createExpedition(
+                        0,
+                        EntityAddress(receiverAddressesArray),
+                        EntityAddress(senderAddressesArray),
+                        EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
+                        EntityPackage(
+                            boxCategoryField.editText!!.text.toString(),
+                            boxDescriptionField.editText!!.text.toString(),
+                            dimensArray,
+                            boxWeightField.editText!!.text.toString().toFloat(),
+                            boxNameField.editText!!.text.toString(),
+                            "URL"
+                        )
+                    )
                 } else {
                     // если это редактирование старого
                     mainViewModel.editExpedition(
-                            EntityExpedition(
-                                    expedition.id,
-                                    EntityAddress(receiverAddressesArray),
-                                    EntityAddress(senderAddressesArray),
-                                    EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
-                                    expedition.sender,
-                                    EntityPackage(
-                                            boxCategoryField.editText!!.text.toString(),
-                                            boxDescriptionField.editText!!.text.toString(),
-                                            dimensArray,
-                                            boxWeightField.editText!!.text.toString().toDouble().toFloat(),
-                                            boxNameField.editText!!.text.toString(),
-                                            expedition.expeditionPackage.picture
-                                    )
-                            )
+                        EntityAddress(receiverAddressesArray),
+                        EntityAddress(senderAddressesArray),
+                        EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND,
+                        EntityPackage(
+                            boxCategoryField.editText!!.text.toString(),
+                            boxDescriptionField.editText!!.text.toString(),
+                            dimensArray,
+                            boxWeightField.editText!!.text.toString().toDouble().toFloat(),
+                            boxNameField.editText!!.text.toString(),
+                            expedition.expeditionPackage.picture
+                        )
                     )
                 }
                 dismiss()
@@ -148,7 +160,11 @@ class ExpeditionEditDialogFragment : DialogFragment() {
     }
 
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_dialog_edit_user, container, false)
     }
@@ -188,8 +204,10 @@ class ExpeditionEditDialogFragment : DialogFragment() {
             return false
         } else {
             // разбиваем адрес по запятым
-            val addressesArray = inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            for (i in addressesArray.indices) addressesArray[i] = addressesArray[i].trim { it <= ' ' }
+            val addressesArray =
+                inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            for (i in addressesArray.indices) addressesArray[i] =
+                addressesArray[i].trim { it <= ' ' }
 
             // нехватает полей
             if (addressesArray.size != 4) {
@@ -227,7 +245,8 @@ class ExpeditionEditDialogFragment : DialogFragment() {
         } else {
             // разбиваем по запятым
 
-            val dimensArray = inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val dimensArray =
+                inputText.split(",".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
             for (i in dimensArray.indices) dimensArray[i] = dimensArray[i].trim { it <= ' ' }
 
             // нехватает полей

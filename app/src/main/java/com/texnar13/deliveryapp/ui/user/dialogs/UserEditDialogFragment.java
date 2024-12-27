@@ -140,18 +140,15 @@ public class UserEditDialogFragment extends DialogFragment {
                     // отправка изменённых значений в бд
                     MainViewModel.Companion.getViewModel(requireActivity()).editUser(new EntityUser(
                             user.getId(),
-                            user.getPassword(),
-                            new EntityAddress(
-                                    new String[]{
-                                            inputCountry.getEditText().getText().toString(),
-                                            inputCity.getEditText().getText().toString(),
-                                            inputDistrict.getEditText().getText().toString(),
-                                            inputStreet.getEditText().getText().toString()
-                                    }),
                             inputMail.getEditText().getText().toString(),
                             inputName.getEditText().getText().toString(),
                             "+" + inputPhone.getEditText().getText().toString(),
-                            user.getRating()
+                            new EntityAddress(
+                                    inputCountry.getEditText().getText().toString(),
+                                    inputCity.getEditText().getText().toString(),
+                                    inputDistrict.getEditText().getText().toString(),
+                                    inputStreet.getEditText().getText().toString()
+                            )
                     ));
 
                     dismiss();

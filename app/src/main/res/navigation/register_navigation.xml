@@ -67,9 +67,5 @@
         android:name="com.texnar13.deliveryapp.ui.expeditions.ExpeditionsFragment"
         android:label="fragment_expeditions"
         tools:layout="@layout/fragment_expeditions" >
-        <action
-            app:restoreState="true"
-            android:id="@+id/action_fragment_expeditions_to_fragment_trajectories"
-            app:destination="@id/fragment_trajectories" />
     </fragment>
 </navigation>

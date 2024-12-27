@@ -14,8 +14,11 @@ import com.texnar13.deliveryapp.view_model.MainViewModel.Companion.getViewModel
 class LoginFragment : Fragment() {
 
     // обновляемая разметка
-    lateinit var loginContainer: View
-    lateinit var registerButton: View
+    private lateinit var loginContainer: View
+    private lateinit var registerButton: View
+    private lateinit var email : EditText
+    private lateinit var password : EditText
+    private lateinit var serverAddress: EditText
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -26,17 +29,21 @@ class LoginFragment : Fragment() {
         // разметка
         loginContainer = rootView.findViewById(R.id.fragment_login_input_container)
         registerButton = rootView.findViewById(R.id.fragment_login_go_to_register_button)
-        val email = rootView.findViewById<EditText>(R.id.fragment_login_login_edit_email)
-        val password = rootView.findViewById<EditText>(R.id.fragment_login_login_edit_password)
+        email = rootView.findViewById(R.id.fragment_login_login_edit_email)
+        password = rootView.findViewById(R.id.fragment_login_login_edit_password)
+        serverAddress = rootView.findViewById(R.id.server_address_input)
 
 
         // работа с ViewModel
         val viewModel = getViewModel(requireActivity())
 
-        // Загружаем предыдущие вводимые поля
-        val lastAuth = viewModel.getUserLastAuth()
-        email.setText(lastAuth[0])
-        password.setText(lastAuth[1])
+
+
+        // сохранение адреса сервера
+        rootView.findViewById<View>(R.id.save_button).setOnClickListener {
+            viewModel.setServerAddress(serverAddress.text.toString())
+        }
+
 
         // отслеживаем текущего пользователя
         viewModel.token.observe(viewLifecycleOwner) { token ->
@@ -72,6 +79,19 @@ class LoginFragment : Fragment() {
         }
 
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        // работа с ViewModel
+        val viewModel = getViewModel(requireActivity())
+
+        // Загружаем предыдущие вводимые поля
+        val lastAuth = viewModel.getUserLastAuth()
+        email.setText(lastAuth[0])
+        password.setText(lastAuth[1])
+        serverAddress.setText(viewModel.getServerAddress())
     }
 
 }

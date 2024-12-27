@@ -1,152 +1,137 @@
-package com.texnar13.deliveryapp.ui.login;
+package com.texnar13.deliveryapp.ui.login
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.navigation.Navigation.findNavController
+import com.google.android.material.textfield.TextInputLayout
+import com.texnar13.deliveryapp.R
+import com.texnar13.deliveryapp.model.entities.EntityAddress
+import com.texnar13.deliveryapp.view_model.MainViewModel.Companion.getViewModel
 
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.navigation.Navigation;
 
-import com.google.android.material.textfield.TextInputLayout;
-import com.texnar13.deliveryapp.R;
-import com.texnar13.deliveryapp.model.entities.EntityUser;
-import com.texnar13.deliveryapp.view_model.MainViewModel;
+class RegisterFragment : Fragment() {
 
-public class RegisterFragment extends Fragment {
-
-    // Required empty public constructor
-    public RegisterFragment() {
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_register, container, false);
+        val rootView = inflater.inflate(R.layout.fragment_register, container, false)
 
 
-        TextInputLayout emailField = rootView.findViewById(R.id.fragment_register_input_mail);
-        TextInputLayout passwordField = rootView.findViewById(R.id.fragment_register_input_password);
-        TextInputLayout nameField = rootView.findViewById(R.id.fragment_register_input_name);
-        TextInputLayout phoneField = rootView.findViewById(R.id.fragment_register_input_phone);
-        TextInputLayout addressField = rootView.findViewById(R.id.fragment_register_input_address);
+        val emailField = rootView.findViewById<TextInputLayout>(R.id.fragment_register_input_mail)
+        val passwordField =
+            rootView.findViewById<TextInputLayout>(R.id.fragment_register_input_password)
+        val nameField = rootView.findViewById<TextInputLayout>(R.id.fragment_register_input_name)
+        val phoneField = rootView.findViewById<TextInputLayout>(R.id.fragment_register_input_phone)
+        val addressField =
+            rootView.findViewById<TextInputLayout>(R.id.fragment_register_input_address)
 
 
         // получаем вьюмодель
-        MainViewModel viewModel = MainViewModel.Companion.getViewModel(requireActivity());
+        val viewModel = getViewModel(requireActivity())
 
 
         // отслеживаем авторизацию и состояние текущего пользователя
-        viewModel.getToken().observe(getViewLifecycleOwner(), token -> {
-            // если пользователь получен из базы
-            if (token != null) {
+        viewModel.token.observe(
+            viewLifecycleOwner
+        ) {
+            // если токен получен
+            if (it != null) {
                 // переход на страницу пользователя
-                Navigation.findNavController(requireActivity(), R.id.activity_main_nav_host_fragment).navigate(
-                        R.id.action_registerFragment_to_mainFragment
-                );
+                findNavController(
+                    requireActivity(),
+                    R.id.activity_main_nav_host_fragment
+                ).navigate(R.id.action_registerFragment_to_mainFragment)
             }
-        });
-
-
+        }
 
 
         // нажатие кнопки регистрация
-        rootView.findViewById(R.id.fragment_register_create_button).setOnClickListener(view -> {
+        rootView.findViewById<View>(R.id.fragment_register_create_button)
+            .setOnClickListener {
 
-            // todo сделать блокировку кнопки если все данные корректны
+                // todo сделать блокировку кнопки если все данные корректны
+                // --------- проверка полей ---------
+                var isCorrect = true
 
-            // --------- проверка полей ---------
-            boolean isCorrect = true;
-            if (emailField.getEditText().getText().toString().trim().length() == 0) {
-                isCorrect = false;
-                emailField.setError("Поле пустое!");
-            } else
-                emailField.setErrorEnabled(false);
+                // Регулярное выражение для проверки почты
 
-            if (passwordField.getEditText().getText().toString().trim().length() == 0) {
-                isCorrect = false;
-                passwordField.setError("Поле пустое!");
-            } else
-                passwordField.setErrorEnabled(false);
+                val mailText = emailField.editText!!.text.toString().trim { it <= ' ' }
+                val passwordText = passwordField.editText!!.text.toString().trim { it <= ' ' }
+                val nameText = nameField.editText!!.text.toString().trim { it <= ' ' }
+                val phoneText = phoneField.editText!!.text.toString().trim { it <= ' ' }
+                val addressText = addressField.editText!!.text.toString().trim { it <= ' ' }
 
-            if (nameField.getEditText().getText().toString().trim().length() == 0) {
-                isCorrect = false;
-                nameField.setError("Поле пустое!");
-            } else
-                nameField.setErrorEnabled(false);
+                val mailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$".toRegex()
+                if (mailText.isEmpty()) {
+                    isCorrect = false
+                    emailField.error = "Поле пустое!"
+                } else if (!mailRegex.matches(mailText)) {
+                    isCorrect = false
+                    emailField.error = "Неправильный формат "
+                } else  emailField.isErrorEnabled = false
 
-            if (phoneField.getEditText().getText().toString().trim().length() == 0) {
-                isCorrect = false;
-                phoneField.setError("Поле пустое!");
-            } else if (phoneField.getEditText().getText().toString().trim().length() != 11) {
-                isCorrect = false;
-                phoneField.setError("Некорректный телефон!");
-            } else
-                phoneField.setErrorEnabled(false);
+                if (passwordText.isEmpty()) {
+                    isCorrect = false
+                    passwordField.error = "Поле пустое!"
+                } else passwordField.isErrorEnabled = false
 
-            // разбиваем адрес по запятым
-            String address = addressField.getEditText().getText().toString().trim();
-            String[] addressesArray = address.split(",");
-            for (int i = 0; i < addressesArray.length; i++)
-                addressesArray[i] = addressesArray[i].trim();
+                if (nameText.isEmpty()) {
+                    isCorrect = false
+                    nameField.error = "Поле пустое!"
+                } else nameField.isErrorEnabled = false
+
+                if (phoneText.isEmpty()) {
+                    isCorrect = false
+                    phoneField.error = "Поле пустое!"
+                } else if (phoneText.length != 11) {
+                    isCorrect = false
+                    phoneField.error = "Некорректный телефон!"
+                } else phoneField.isErrorEnabled = false
+
+                // разбиваем адрес по запятым
+                val addressesArray =
+                    addressText.split(",".toRegex()).dropLastWhile { it.isEmpty() }
+                        .toTypedArray()
+                for (i in addressesArray.indices) addressesArray[i] =
+                    addressesArray[i].trim { it <= ' ' }
 
 
-            if (address.length() == 0) {
-                isCorrect = false;
-                addressField.setError("Поле пустое!");
-            } else {
-
-                if (addressesArray.length != 4) {
-                    isCorrect = false;
-                    addressField.setError("Страна, Город, Улица, Дом");
+                if (addressText.isEmpty()) {
+                    isCorrect = false
+                    addressField.error = "Поле пустое!"
                 } else {
+                    if (addressesArray.size != 4) {
+                        isCorrect = false
+                        addressField.error = "Страна, Город, Район, Улица"
+                    } else {
+                        // проверка каждого отдельного слова
 
-                    // проверка каждого отдельного слова
-                    for (String s : addressesArray) {
-                        if (s.length() == 0)
-                            isCorrect = false;
+                        for (s in addressesArray) {
+                            if (s.isEmpty()) isCorrect = false
+                        }
+                        if (isCorrect) addressField.isErrorEnabled = false
                     }
-                    if (isCorrect)
-                        addressField.setErrorEnabled(false);
+                }
+
+
+                // если всё ок
+                if (isCorrect) {
+                    // отправляем во вьюмодель
+                    viewModel.tryRegisterUser(
+                        mailText,
+                        passwordText,
+                        EntityAddress(addressesArray),
+                        nameText,
+                        "+$phoneText"
+                    )
                 }
             }
 
-
-            // если всё ок
-            if (isCorrect) {
-
-
-                // отправляем во вьюмодель
-                viewModel.tryRegisterUser(
-                        emailField.getEditText().getText().toString().trim(),
-                        passwordField.getEditText().getText().toString().trim(),
-                        addressesArray,
-                        nameField.getEditText().getText().toString().trim(),
-                        "+" + phoneField.getEditText().getText().toString().trim()
-                );
-            }
-
-        });
-
-        return rootView;
+        return rootView
     }
 }
-
-
-
-
-
-
-/*
- *
- *
- *
- *
- * */

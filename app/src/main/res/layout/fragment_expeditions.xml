@@ -25,6 +25,21 @@
                 android:layout_marginTop="@dimen/containers_margin"
                 android:background="@drawable/container_round"
                 android:padding="@dimen/containers_margin">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Загрузка..."
+                    android:textSize="15sp" />
+            </RelativeLayout>
+
+
+            <RelativeLayout
+                android:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/containers_margin"
+                android:background="@drawable/container_round"
+                android:padding="@dimen/containers_margin">
 
                 <LinearLayout
                     android:layout_width="wrap_content"

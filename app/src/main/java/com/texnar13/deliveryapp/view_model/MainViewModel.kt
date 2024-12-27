@@ -7,7 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.texnar13.deliveryapp.model.entities.EntityAddress
 import com.texnar13.deliveryapp.model.entities.EntityExpedition
+import com.texnar13.deliveryapp.model.entities.EntityExpedition.Companion.ExpeditionStatus
+import com.texnar13.deliveryapp.model.entities.EntityPackage
 import com.texnar13.deliveryapp.model.entities.EntityTrip
 import com.texnar13.deliveryapp.model.entities.EntityUser
 import com.texnar13.deliveryapp.model.http.HttpApi
@@ -20,8 +23,8 @@ import java.security.NoSuchAlgorithmException
 
 
 class MainViewModel(
-        private val httpClient: HttpApi,
-        private val spHolder: SPHolder
+    private val httpClient: HttpApi,
+    private val spHolder: SPHolder
 ) : ViewModel(), HttpApi.HttpResultAndStatusListener {
 
 
@@ -35,8 +38,8 @@ class MainViewModel(
         // получение экземпляра ViewModel из фрагмента
         fun getViewModel(activity: FragmentActivity): MainViewModel {
             return ViewModelProvider(
-                    activity,
-                    MainViewModelFactory(activity)
+                activity,
+                MainViewModelFactory(activity)
             )[MainViewModel::class.java]
         }
 
@@ -112,7 +115,8 @@ class MainViewModel(
 // ------------------------------------- Прогресс бар загрузки -------------------------------------
 // -------------------------------------------------------------------------------------------------
 
-    private val mutableHttpLoadingStatus = MutableLiveData(HttpApi.Companion.HttpClientState.NO_WORK)
+    private val mutableHttpLoadingStatus =
+        MutableLiveData(HttpApi.Companion.HttpClientState.NO_WORK)
     val httpLoadingStatus: LiveData<HttpApi.Companion.HttpClientState> = mutableHttpLoadingStatus
 
     // Статус HTTP интерфейса
@@ -127,28 +131,47 @@ class MainViewModel(
 
 
 // -------------------------------------------------------------------------------------------------
+// ----------------------------------- Назначение адреса сервера -----------------------------------
+// -------------------------------------------------------------------------------------------------
+
+    fun getServerAddress(): String {
+        return spHolder.getServerAddress()
+    }
+
+    fun setServerAddress(address: String) {
+        spHolder.setServerAddress(address)
+        httpClient.updateServerAddress(address)
+        sendToast("Сохранено")
+    }
+
+// -------------------------------------------------------------------------------------------------
 // -------------------------- Регистрация пользователя (Создание учётки) ---------------------------
 // -------------------------------------------------------------------------------------------------
 
     fun tryRegisterUser(
-            email: String,
-            password: String,
-            address: Array<String>,//[4]
-            name: String,
-            phone: String
+        email: String,
+        password: String,
+        address: EntityAddress,//[4]
+        name: String,
+        phone: String
     ) {
         Log.i(TAG, "tryRegisterUser")
+
+        // в любом случае сохраняем последние введённые поля
+        spHolder.setUserLastAuth(
+            email,
+            password
+        )
 
         viewModelScope.launch {
 
             // пытаемся аутентифицировать пользователя
             httpClient.createNewUser(
-                    email = email,
-                    password = password,
-                    confirmPassword = password,
-                    address = address,
-                    name = name,
-                    phone = phone
+                email = email,
+                password = password,
+                address = address,
+                name = name,
+                phone = phone
             )
         }
     }
@@ -156,13 +179,14 @@ class MainViewModel(
     // обратная связь от Api
     override fun httpCreateUserFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
         Log.i(TAG, "httpCreateUserFailure status=$status")
-        sendToast("Ошибка при создании пользователя: $status")
+        sendToast("Ошибка: $status")
     }
 
     // обратная связь от Api
     override fun httpCreateUserSuccess(token: String) {
         Log.i(TAG, "httpCreateUserSuccess token=$token")
         sendToast("Пользователь успешно создан. Загрузка профиля")
+
         // сохраняем созданый токен
         this.token.postValue(token)
 
@@ -193,8 +217,8 @@ class MainViewModel(
 
         // в любом случае сохраняем последние введённые поля
         spHolder.setUserLastAuth(
-                email,
-                password
+            email,
+            password
         )
     }
 
@@ -222,6 +246,7 @@ class MainViewModel(
     // Получение данных пользователя неуспешно
     override fun httpGetUserDataFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
         Log.i(TAG, "httpGetUserDataFailure status=$status")
+        sendToast("Ошибка: $status")
 
     }
 
@@ -245,39 +270,40 @@ class MainViewModel(
     }
 
     // редактирование пользователя
+    private var tempEditedUserData: EntityUser? = null
     fun editUser(editedUserData: EntityUser) {
+        tempEditedUserData = editedUserData
 
-        // отправляем асинхроннный запрос
-        viewModelScope.launch {
-            httpClient.editUserData(editedUserData)
+        val token = token.value
+        if (token != null) {
+            // отправляем асинхроннный запрос
+            viewModelScope.launch {
+                httpClient.editUserData(token, editedUserData)
+            }
         }
-
     }
 
     override fun httpEditUserDataFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
-
         when (errorCode) {
             HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
-                sendToast("Сессия истекла")
+                sendToast("Сессия истекла: $status")
                 // Выходим из текущего пользователя
                 logout()
             }
 
-            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
-                sendToast("Ошибка при сохранении данных пользователя: $status")
+            else -> sendToast("Ошибка при сохранении: $status")
         }
     }
 
-    override fun httpEditUserDataSuccess(user: EntityUser) {
+    override fun httpEditUserDataSuccess() {
         sendToast("Данные пользователя успешно сохранены")
-        currentUser.postValue(user)
+        currentUser.postValue(tempEditedUserData)
     }
 
 
 // -------------------------------------------------------------------------------------------------
 // -------------------------------------- Страничка маршрутов --------------------------------------
 // -------------------------------------------------------------------------------------------------
-
 
 
     fun loadTrips() {// todo
@@ -307,8 +333,19 @@ class MainViewModel(
     }
 
 
-    override fun httpLoadTrajectoriesFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
-        TODO("Not yet implemented")
+    override fun httpLoadTrajectoriesFailure(
+        errorCode: HttpApi.Companion.ErrorCode,
+        status: String
+    ) {
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла: $status")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            else -> sendToast("Ошибка: $status")
+        }
     }
 
     override fun httpLoadTrajectoriesSuccess(trips: List<EntityTrip>) {
@@ -324,7 +361,7 @@ class MainViewModel(
     // загрузить отправления пользователя
     fun loadUserExpeditions() {
         // обнуляем
-        currentUserExpeditions.value = null
+        currentUserExpeditions.postValue(null)
 
         val token = token.value
         if (token != null) {
@@ -336,8 +373,19 @@ class MainViewModel(
     }
 
     // ответ Http загрузчика
-    override fun httpLoadUserExpeditionsFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
-        TODO("Not yet implemented")
+    override fun httpLoadUserExpeditionsFailure(
+        errorCode: HttpApi.Companion.ErrorCode,
+        status: String
+    ) {
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла: $status")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            else -> sendToast("Ошибка: $status")
+        }
     }
 
     // ответ Http загрузчика
@@ -347,7 +395,23 @@ class MainViewModel(
     }
 
     // создание нового отправления
-    fun createExpedition(expedition: EntityExpedition) {
+    fun createExpedition(
+        id: Long,
+        addressReceiver: EntityAddress,
+        addressSender: EntityAddress,
+        status: ExpeditionStatus,
+        expeditionPackage: EntityPackage
+    ) {
+        val expedition = EntityExpedition(
+            id,
+            addressReceiver,
+            addressSender,
+            status,
+            currentUser.value!!.id,
+            null,
+            expeditionPackage
+        )
+
         val token = token.value
         if (token != null) {
             // создание нового отправления
@@ -359,7 +423,10 @@ class MainViewModel(
 
 
     // ответ создания
-    override fun httpCreateExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+    override fun httpCreateExpeditionFailure(
+        errorCode: HttpApi.Companion.ErrorCode,
+        status: String
+    ) {
         when (errorCode) {
             HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
                 sendToast("Сессия истекла")
@@ -367,7 +434,7 @@ class MainViewModel(
                 logout()
             }
 
-            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
+            else ->
                 sendToast("Ошибка при создании отправления = $status")
         }
     }
@@ -375,30 +442,35 @@ class MainViewModel(
     // ответ создания
     override fun httpCreateExpeditionSuccess(expedition: EntityExpedition) {
 
-        //отладка
-        val tempList = MutableList(currentUserExpeditions.value!!.size + 1) {
-            if (it == currentUserExpeditions.value!!.size)
-                expedition
-            else
-                currentUserExpeditions.value!![it]
-        }
-        currentUserExpeditions.postValue(tempList)
-        //отладка
-
         sendToast("Отправление успешно создано")
 
-        // loadUserExpeditions()//убрал для отладки
+        loadUserExpeditions()
     }
 
     // выбираем из разметки отправление которое будет редактироваться (для вывода в диалог)
     // может передаваться null тогда это будет диалог создания
-    fun selectExpeditionForEdit(editedExpeditionData: EntityExpedition?){
+    fun selectExpeditionForEdit(editedExpeditionData: EntityExpedition?) {
 
         selectedExpedition.value = editedExpeditionData
     }
 
     // Редактируем отправление
-    fun editExpedition(editedExpeditionData: EntityExpedition) {
+    fun editExpedition(
+        addressReceiver: EntityAddress,
+        addressSender: EntityAddress,
+        status: ExpeditionStatus,
+        expeditionPackage: EntityPackage
+        ) {
+        val editedExpeditionData = EntityExpedition(
+            selectedExpedition.value!!.id,
+            addressReceiver,
+            addressSender,
+            status,
+            selectedExpedition.value!!.senderId,
+            selectedExpedition.value!!.courierId,
+            expeditionPackage
+        )
+
         val token = token.value
         if (token != null) {
             // Редактируем отправление
@@ -417,14 +489,14 @@ class MainViewModel(
                 logout()
             }
 
-            HttpApi.Companion.ErrorCode.CONNECTION_ERROR ->
+            else ->
                 sendToast("Ошибка при редактировании отправления = $status")
         }
     }
 
     // ответ редактирования
     override fun httpEditExpeditionSuccess(expedition: EntityExpedition) {
-        sendToast("Данные сохранены (заработает когда будет сервер expedition.sender=${expedition.sender})")
+        sendToast("Данные сохранены (заработает когда будет сервер expedition.sender=${expedition.senderId})")
         loadUserExpeditions()
     }
 
@@ -432,7 +504,7 @@ class MainViewModel(
     val trajectoryAndExpeditionData = MutableLiveData<EntityTrip?>(null)
 
     // Для функции "посмотреть маршрут"
-    fun loadTrajectoryDataForExpedition(expedition: EntityExpedition){
+    fun loadTrajectoryDataForExpedition(expedition: EntityExpedition) {
         val token = token.value
         if (token != null) {
             // Редактируем отправление
@@ -443,7 +515,10 @@ class MainViewModel(
     }
 
     // ответ "посмотреть маршрут"
-    override fun loadTrajectoryDataForExpeditionFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+    override fun loadTrajectoryDataForExpeditionFailure(
+        errorCode: HttpApi.Companion.ErrorCode,
+        status: String
+    ) {
         TODO("Not yet implemented")
     }
 
@@ -486,8 +561,5 @@ class MainViewModel(
     override fun selectPackageDeliveryTripSuccess() {
         sendToast("API говорит ДА...")
     }
-
-
-
 }
 
