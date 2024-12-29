@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.util.Date
 
 
 class MainViewModel(
@@ -306,12 +307,30 @@ class MainViewModel(
 // -------------------------------------------------------------------------------------------------
 
 
-    fun loadTrips() {// todo
+    fun loadTrips(
+        departCountry:String,
+        departCity: String,
+        destinationCountry:String,
+        destinationCity: String,
+        departDate: Date,
+        freeWeightMin: Float
+    ) {// todo
 
-        viewModelScope.launch {
-            httpClient.loadTrajectoriesByParams()
+
+        val token = token.value
+        if (token != null) {
+            viewModelScope.launch {
+                httpClient.loadTrajectoriesByParams(
+                    token,
+                    departCountry,
+                    departCity,
+                    destinationCountry,
+                    destinationCity,
+                    departDate,
+                    freeWeightMin
+                )
+            }
         }
-
         //        // получаем таблицу
 //        MongoCollection<Document> tripsCollection = mongoDatabase.getCollection(DBTrip.TABLE_NAME);
 //
@@ -496,7 +515,7 @@ class MainViewModel(
 
     // ответ редактирования
     override fun httpEditExpeditionSuccess(expedition: EntityExpedition) {
-        sendToast("Данные сохранены (заработает когда будет сервер expedition.sender=${expedition.senderId})")
+        sendToast("Данные сохранены")
         loadUserExpeditions()
     }
 

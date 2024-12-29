@@ -53,9 +53,9 @@ class ExpeditionTrajectoryInfoDialog : DialogFragment() {
                             |Город отправления - %s
                             |Дата отправления - %s
                         """.trimMargin(),
-                        it.sendCountry,
-                        it.sendCity,
-                        it.sentDate
+                        it.sendAddress.getCountry(),
+                        it.sendAddress.getCountry(),
+                        it.sendAddress.getCountry()
                 )
                 button.visibility = View.VISIBLE
             }
