@@ -401,7 +401,8 @@ class MainViewModel(
             "",
             "",
             Date(),
-            0F)
+            0F
+        )
     }
 
 
@@ -518,7 +519,7 @@ class MainViewModel(
             addressSender,
             status,
             selectedExpedition.value!!.senderId,
-            selectedExpedition.value!!.courierId,
+            selectedExpedition.value!!.tripId,
             expeditionPackage
         )
 
@@ -570,7 +571,16 @@ class MainViewModel(
         errorCode: HttpApi.Companion.ErrorCode,
         status: String
     ) {
-        TODO("Not yet implemented")
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            else ->
+                sendToast("Ошибка при редактировании отправления = $status")
+        }
     }
 
     // ответ "посмотреть маршрут"

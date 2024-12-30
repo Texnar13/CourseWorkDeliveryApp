@@ -8,15 +8,16 @@ data class EntityExpedition(
     val addressSender: EntityAddress,
     val status: ExpeditionStatus,
     val senderId: Long,
-    val courierId: Long?,
+    val tripId: Long?,
     val expeditionPackage: EntityPackage
 ) : Serializable {
 
     companion object {
-        enum class ExpeditionStatus(textMean: String) {
-            WAIT_SEND("Wait"),
-            SENT("Sent"),
-            DONE("Done")
+        enum class ExpeditionStatus(val textMean: String) {
+            WAIT_SEND("wait"),
+            SENT("sent"),
+            DONE("done");
+
         }
     }
 

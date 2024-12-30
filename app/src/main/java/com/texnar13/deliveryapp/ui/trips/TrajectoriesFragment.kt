@@ -66,7 +66,6 @@ class TrajectoriesFragment  // Required empty public constructor
             rootView.findViewById<LinearLayout>(R.id.fragment_trajectories_search_result_container)
 
 
-
         // кнопка добавить маршрут
         rootView.findViewById<View>(R.id.add_button).setOnClickListener {
 
@@ -76,7 +75,6 @@ class TrajectoriesFragment  // Required empty public constructor
 
         // -------------------------------- подписываемся на изменения во viewModel --------------------------------
         val mainViewModel = MainViewModel.getViewModel(requireActivity())
-
 
 
 //        textViewDepartDate.editText!!.addTextChangedListener( /* watcher = */ object : TextWatcher {
@@ -124,14 +122,6 @@ class TrajectoriesFragment  // Required empty public constructor
         // смотрим за отправлением, если оно есть вводим его параметры в поиск маршрутов
         mainViewModel.selectedExpedition.observe(viewLifecycleOwner) {
             if (it != null) {
-//                val date = "2020-07-07"
-//                val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-//                val dateDate: Date = dateFormatter.parse(date) // You got Date object of 2020 jul 7
-//
-//                println(formatter.format(dateDate)) //it prints "2020-07-07"
-//                println(dateDate)
-
-
                 // Выставляем данные в поля
                 textViewDepartCountry.setText(it.addressSender.address[0])
                 textViewDepartCity.setText(it.addressSender.address[1])
@@ -275,18 +265,26 @@ class TrajectoriesFragment  // Required empty public constructor
                 notificationViewElement.findViewById(R.id.element_trip_box_join_button)
 
 
+            username.text = "Маршрут №${tripUnit.id}"
+
             description.text = String.format(
                 Locale.getDefault(), """
-                            Отправляюсь %s
-                            из %s, %s -> в %s, %s
-                            Могу взять %fКг веса
-                            """.trimIndent(),
+                    Отправляюсь %s
+                    Прибываю %s
+                    из %s, %s -> в %s, %s
+                    Могу взять %.3fкг веса
+                    
+                    uID=%d busy=%s
+                    """.trimIndent(),
+                dateFormatter.format(tripUnit.depDate),
+                dateFormatter.format(tripUnit.destDate),
                 tripUnit.sendAddress.getCountry(),
-                tripUnit.sendAddress.getCountry(),
-                tripUnit.sendAddress.getCountry(),
-                tripUnit.sendAddress.getCountry(),
-                tripUnit.sendAddress.getCountry(),
-                tripUnit.availableWeight
+                tripUnit.sendAddress.getCity(),
+                tripUnit.receivingAddress.getCountry(),
+                tripUnit.receivingAddress.getCity(),
+                tripUnit.availableWeight,
+                tripUnit.userId,
+                tripUnit.isBusy.toString()
             )
 
 

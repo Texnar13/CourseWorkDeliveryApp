@@ -13,10 +13,14 @@ import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.texnar13.deliveryapp.R
 import com.texnar13.deliveryapp.view_model.MainViewModel
+import java.text.SimpleDateFormat
 import java.util.Locale
 
 class ExpeditionTrajectoryInfoDialog : DialogFragment() {
 
+
+    // Формат ввода даты
+    private val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.US)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         super.onCreate(savedInstanceState)
@@ -25,9 +29,11 @@ class ExpeditionTrajectoryInfoDialog : DialogFragment() {
         // -------- начинаем строить диалог --------
         val builder = AlertDialog.Builder(activity)
         // layout диалога
-        val dialogLayout = layoutInflater.inflate(R.layout.fragment_dialog_view_expedition_and_trajectory_data, null)
+        val dialogLayout = layoutInflater.inflate(
+            R.layout.fragment_dialog_view_expedition_and_trajectory_data,
+            null
+        )
         builder.setView(dialogLayout)
-
 
 
         // инициализация разметки
@@ -46,16 +52,26 @@ class ExpeditionTrajectoryInfoDialog : DialogFragment() {
                 text.text = "Поиск информации..."
                 button.visibility = View.GONE
             } else {
-                text.text = String.format(Locale.getDefault(),
-                        """
-                            |Здесь будет всякая информация о маршруте и посылке, например:
-                            |Страна отправления - %s
-                            |Город отправления - %s
-                            |Дата отправления - %s
-                        """.trimMargin(),
-                        it.sendAddress.getCountry(),
-                        it.sendAddress.getCountry(),
-                        it.sendAddress.getCountry()
+                text.text = String.format(
+                    Locale.getDefault(),
+                    """
+                    |Маршрут №%d
+                    |Отправляюсь %s
+                    |Прибываю %s
+                    |из %s, %s -> в %s, %s
+                    |Могу взять %.3fкг веса
+                    |
+                    |uID=%d busy=%s
+                    """.trimMargin(),
+                    it.id,
+                    dateFormatter.format(it.depDate),
+                    dateFormatter.format(it.destDate),
+                    it.sendAddress.getCountry(),
+                    it.sendAddress.getCity(),
+                    it.receivingAddress.getCountry(),
+                    it.receivingAddress.getCity(),
+                    it.availableWeight,
+                    it.userId, it.isBusy.toString()
                 )
                 button.visibility = View.VISIBLE
             }

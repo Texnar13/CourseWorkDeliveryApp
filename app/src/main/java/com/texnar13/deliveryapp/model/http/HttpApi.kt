@@ -1,8 +1,6 @@
 package com.texnar13.deliveryapp.model.http
 
-import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.texnar13.deliveryapp.model.entities.EntityAddress
 import com.texnar13.deliveryapp.model.entities.EntityExpedition
 import com.texnar13.deliveryapp.model.entities.EntityPackage
@@ -142,7 +140,9 @@ class HttpApi(
 // ------------------------ Методы ------------------------
 // --------------------------------------------------------
 
-    // POST запрос создания нового пользователя и получения токена
+    /** POST запрос создания нового пользователя и получения токена
+     *
+     */
     suspend fun createNewUser(
         email: String,
         password: String,
@@ -588,12 +588,12 @@ class HttpApi(
                                 jsonObject.getString("dep_street")
                             ),
                             status = when (jsonObject.optString("status")) {
-                                "Sent" -> EntityExpedition.Companion.ExpeditionStatus.SENT
-                                "Done" -> EntityExpedition.Companion.ExpeditionStatus.DONE
+                                EntityExpedition.Companion.ExpeditionStatus.SENT.textMean -> EntityExpedition.Companion.ExpeditionStatus.SENT
+                                EntityExpedition.Companion.ExpeditionStatus.DONE.textMean -> EntityExpedition.Companion.ExpeditionStatus.DONE
                                 else -> EntityExpedition.Companion.ExpeditionStatus.WAIT_SEND
                             },
                             senderId = jsonObject.getLong("sender_id"),
-                            courierId = (
+                            tripId = (
                                     if (jsonObject.isNull("courier_id")) {
                                         null
                                     } else {
@@ -801,8 +801,8 @@ class HttpApi(
             JSONObject().apply {
                 put("ID", expedition.id)
                 put("sender_id", expedition.senderId)
-                put("courier_id", expedition.courierId)
-                put("status", expedition.status)
+                put("courier_id", expedition.tripId)
+                put("status", expedition.status.textMean)
                 put("dep_country", expedition.addressSender.getCountry())
                 put("dep_city", expedition.addressSender.getCity())
                 put("dep_district", expedition.addressSender.getDistrict())
@@ -952,7 +952,6 @@ class HttpApi(
         updateStatus(HttpClientState.IN_PROCESS)
 
 
-
         // Создаём тело запроса с медиатипом JSON
         val requestBody = RequestBody.create(
             "application/json; charset=utf-8".toMediaType(),
@@ -1027,9 +1026,6 @@ class HttpApi(
                         )
                     }
 
-
-
-
                     httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories)
                 } else {
                     when (response.code) {
@@ -1062,39 +1058,38 @@ class HttpApi(
     }
 
 
-
     /** Создать маршрут (METHOD POST)
-    * /create_trip
-    *
-    * Передаётся jwt-токен
-    *
-    * body:
-    * {
-    * //   "user_id": 12345, <- оно берётся из заголовка и устанавливается тому пользователю который отправил запрос
-    * "is_busy": false,
-    * "dep_dat": "2022-12-29T10:00:00Z",
-    * "dep_country": "Ukraine",
-    * "dep_city": "Moscow",
-    * "dep_district": "Central",
-    * "dep_street": "Tverskaya Street",
-    * "dest_date": "2023-12-30T18:00:00Z",
-    * "dest_country": "USA",
-    * "dest_city": "New York",
-    * "dest_district": "Montmartre",
-    * "dest_street": "Rue de Rivoli",
-    * "free_width": 1.2,
-    * "free_height": 1.5,
-    * "free_length": 2.5,
-    * "free_weight": 20.0
-    * }
-    *
-    * response:
-    * {
-    * "message": "Package created"
-    * }
-    *
-    *
-    * */
+     * /create_trip
+     *
+     * Передаётся jwt-токен
+     *
+     * body:
+     * {
+     * //   "user_id": 12345, <- оно берётся из заголовка и устанавливается тому пользователю который отправил запрос
+     * "is_busy": false,
+     * "dep_dat": "2022-12-29T10:00:00Z",
+     * "dep_country": "Ukraine",
+     * "dep_city": "Moscow",
+     * "dep_district": "Central",
+     * "dep_street": "Tverskaya Street",
+     * "dest_date": "2023-12-30T18:00:00Z",
+     * "dest_country": "USA",
+     * "dest_city": "New York",
+     * "dest_district": "Montmartre",
+     * "dest_street": "Rue de Rivoli",
+     * "free_width": 1.2,
+     * "free_height": 1.5,
+     * "free_length": 2.5,
+     * "free_weight": 20.0
+     * }
+     *
+     * response:
+     * {
+     * "message": "Package created"
+     * }
+     *
+     *
+     * */
     suspend fun createTrip(
         token: String,
         depAddresses: EntityAddress,
@@ -1108,21 +1103,23 @@ class HttpApi(
 
 
 
-        Log.e(TAG, "createTrip: token=$token is_busy = ${false}"+"\n"+
-        "dep_dat = ${formatterDate.format(depDate)}"+"\n"+
-        "dep_country = ${depAddresses.getCountry()}"+"\n"+
-        "dep_city = ${depAddresses.getCity()}"+"\n"+
-        "dep_district = ${depAddresses.getDistrict()}"+"\n"+
-        "dep_street = ${depAddresses.getStreet()}"+"\n"+
-        "dest_date = ${formatterDate.format(arrivalDate)}"+"\n"+
-        "dest_country = ${arrivalAddresses.getCountry()}"+"\n"+
-        "dest_city = ${arrivalAddresses.getCity()}"+"\n"+
-        "dest_district = ${arrivalAddresses.getDistrict()}"+"\n"+
-        "dest_street = ${arrivalAddresses.getStreet()}"+"\n"+
-        "free_width = ${0F}"+"\n"+
-        "free_height = ${0F}"+"\n"+
-        "free_length = ${0F}"+"\n"+
-        "free_weight = ${freeWeight}")
+        Log.e(
+            TAG, "createTrip: token=$token is_busy = ${false}" + "\n" +
+                    "dep_dat = ${formatterDate.format(depDate)}" + "\n" +
+                    "dep_country = ${depAddresses.getCountry()}" + "\n" +
+                    "dep_city = ${depAddresses.getCity()}" + "\n" +
+                    "dep_district = ${depAddresses.getDistrict()}" + "\n" +
+                    "dep_street = ${depAddresses.getStreet()}" + "\n" +
+                    "dest_date = ${formatterDate.format(arrivalDate)}" + "\n" +
+                    "dest_country = ${arrivalAddresses.getCountry()}" + "\n" +
+                    "dest_city = ${arrivalAddresses.getCity()}" + "\n" +
+                    "dest_district = ${arrivalAddresses.getDistrict()}" + "\n" +
+                    "dest_street = ${arrivalAddresses.getStreet()}" + "\n" +
+                    "free_width = ${0F}" + "\n" +
+                    "free_height = ${0F}" + "\n" +
+                    "free_length = ${0F}" + "\n" +
+                    "free_weight = ${freeWeight}"
+        )
 
 
         // Создаём тело запроса с медиатипом JSON
@@ -1202,38 +1199,137 @@ class HttpApi(
     }
 
 
-
-    /** посмотреть данные отправления и маршрута
+    /** посмотреть данные отправления и маршрута (METHOD POST)
+     * /select_trip
      *
+     * Передаётся jwt-токен
+     *
+     * body:
+     * {
+     * "trip_id": 3
+     * }
+     *
+     * response:
+     * {
+     * "ID": 3,
+     * "CreatedAt": "2024-12-29T12:22:54.720539Z",
+     * "UpdatedAt": "2024-12-29T12:22:54.720539Z",
+     * "DeletedAt": null,
+     * "user_id": 1,
+     * "is_busy": false,
+     * "dep_dat": "2023-12-29T10:00:00Z",
+     * "dep_country": "Russia",
+     * "dep_city": "Moscow",
+     * "dep_district": "Central",
+     * "dep_street": "Tverskaya Street",
+     * "dest_date": "2023-12-30T18:00:00Z",
+     * "dest_country": "France",
+     * "dest_city": "Paris",
+     * "dest_district": "Montmartre",
+     * "dest_street": "Rue de Rivoli",
+     * "free_width": 1.2,
+     * "free_height": 1.5,
+     * "free_length": 2.5,
+     * "free_weight": 500
+     * }
      */
     suspend fun loadTrajectoryDataForExpedition(token: String, expedition: EntityExpedition) {
-
         // Выставляем статус
         updateStatus(HttpClientState.IN_PROCESS)
-
-        delay(1500)
-        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(
-            EntityTrip(
-                0,
-                1,
-                false,
-                EntityAddress("s","sd","sdf","sdfg"),
-                EntityAddress("s","sd","sdf","sdfg"),
-                Date(),
-                Date(),
-                0F,
-                0F,
-                0F,
-                0F
-            )
-        )
-
-        // посмотреть данные отправления и маршрута
 //        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(errorCode: ErrorCode, status: String)
 //        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityTrip)
 
-        // Выставляем статус
-        updateStatus(HttpClientState.NO_WORK)
+        // Создаём тело запроса с медиатипом JSON
+        val requestBody = RequestBody.create(
+            "application/json; charset=utf-8".toMediaType(),
+            // Тело запроса в формате JSON
+            JSONObject().apply {
+                put("trip_id", expedition.tripId)
+            }.toString()
+        )
+
+        // Создаём запрос
+        val request = Request.Builder()
+            .url("$serverAddress/select_trip")
+            .addHeader("Authorization", "Bearer $token") // Добавляем заголовок с JWT токеном
+            .post(requestBody)
+            .build()
+
+        // Отправляем запрос асинхронно
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Обработка ошибки подключения
+                httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(
+                    ErrorCode.UNDEFINED_ERROR,
+                    "${e.message}"
+                )
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+
+            // Обработка ответа сервера
+            override fun onResponse(call: Call, response: Response) {
+
+                // Обрабатываем успешный ответ
+                if (response.isSuccessful) {
+
+                    // json обьект
+                    val jsonObject = JSONObject(response.body!!.string())
+
+                    // Создаём объект маршрута и как результат добавляем в список
+                    val trip =  EntityTrip(
+                        id = jsonObject.getLong("ID"),
+                        userId = jsonObject.getLong("user_id"),
+                        isBusy = jsonObject.getBoolean("is_busy"),
+                        sendAddress = EntityAddress(
+                            jsonObject.getString("dep_country"),
+                            jsonObject.getString("dep_city"),
+                            jsonObject.getString("dep_district"),
+                            jsonObject.getString("dep_street"),
+                        ),
+                        receivingAddress = EntityAddress(
+                            jsonObject.getString("dest_country"),
+                            jsonObject.getString("dest_city"),
+                            jsonObject.getString("dest_district"),
+                            jsonObject.getString("dest_street"),
+                        ),
+                        depDate = formatterDate.parse(jsonObject.getString("dep_date"))!!,
+                        destDate = formatterDate.parse(jsonObject.getString("dest_date"))!!,
+                        freeWidth = jsonObject.getDouble("free_width").toFloat(),
+                        freeHeight = jsonObject.getDouble("free_height").toFloat(),
+                        freeLength = jsonObject.getDouble("free_length").toFloat(),
+                        availableWeight = jsonObject.getDouble("free_weight").toFloat(),
+                    )
+
+                    httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(trip)
+                } else {
+                    when (response.code) {
+                        400 -> {
+                            httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(
+                                ErrorCode.BAD_REQUEST,
+                                "[${response.code}] некорректный запрос"
+                            )
+                        }
+
+                        401 -> {
+                            httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(
+                                ErrorCode.TOKEN_EXPIRED,
+                                "[${response.code}] Токен авторизации истёк или некорректен"
+                            )
+                        }
+
+                        else -> {
+                            httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(
+                                ErrorCode.UNDEFINED_ERROR,
+                                "${response.code}"
+                            )
+                        }
+                    }
+                }
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+        })
     }
 
     /** Привязать свою посылку к маршруту (METHOD POST)
@@ -1257,7 +1353,7 @@ class HttpApi(
     suspend fun selectPackageDeliveryTrip(
         token: String,
         expedition: EntityExpedition,
-        value: EntityTrip
+        trip: EntityTrip
     ) {
         // Выставляем статус
         updateStatus(HttpClientState.IN_PROCESS)
@@ -1271,18 +1367,14 @@ class HttpApi(
             "application/json; charset=utf-8".toMediaType(),
             // Тело запроса в формате JSON
             JSONObject().apply {
-                put("dep_country", departCountry)
-                put("dep_city", departCity)
-                put("dest_country", destinationCountry)
-                put("dest_city", destinationCity)
-                put("dep_date", formatterDate.format(departDate))
-                put("free_weight", freeWeightMin)
+                put("package_id", expedition.id)
+                put("trip_id", trip.id)
             }.toString()
         )
 
         // Создаём запрос
         val request = Request.Builder()
-            .url("$serverAddress/filtered_trips")
+            .url("$serverAddress/link_with_trip")
             .addHeader("Authorization", "Bearer $token") // Добавляем заголовок с JWT токеном
             .post(requestBody)
             .build()
@@ -1304,64 +1396,25 @@ class HttpApi(
 
                 // Обрабатываем успешный ответ
                 if (response.isSuccessful) {
-
-                    // получаем json обьект и преобразуем строку в массив объектов
-                    val jsonArray = JSONArray(response.body!!.string())
-
-                    // результирующий лист
-                    val trajectories = List(jsonArray.length()) { pos ->
-                        // json обьект
-                        val jsonObject = jsonArray.getJSONObject(pos)
-
-
-                        // Создаём объект маршрута и как результат добавляем в список
-                        EntityTrip(
-                            id = jsonObject.getLong("ID"),
-                            userId = jsonObject.getLong("user_id"),
-                            isBusy = jsonObject.getBoolean("is_busy"),
-                            sendAddress = EntityAddress(
-                                jsonObject.getString("dep_country"),
-                                jsonObject.getString("dep_city"),
-                                jsonObject.getString("dep_district"),
-                                jsonObject.getString("dep_street"),
-                            ),
-                            receivingAddress = EntityAddress(
-                                jsonObject.getString("dest_country"),
-                                jsonObject.getString("dest_city"),
-                                jsonObject.getString("dest_district"),
-                                jsonObject.getString("dest_street"),
-                            ),
-                            depDate = formatterDate.parse(jsonObject.getString("dep_dat"))!!,
-                            destDate = formatterDate.parse(jsonObject.getString("dest_dat"))!!,
-                            freeWidth = jsonObject.getDouble("free_width").toFloat(),
-                            freeHeight = jsonObject.getDouble("free_height").toFloat(),
-                            freeLength = jsonObject.getDouble("free_length").toFloat(),
-                            availableWeight = jsonObject.getDouble("free_weight").toFloat(),
-                        )
-                    }
-
-
-
-
-                    httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories)
+                    httpResultAndStatusListener?.selectPackageDeliveryTripSuccess()
                 } else {
                     when (response.code) {
                         400 -> {
-                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                            httpResultAndStatusListener?.selectPackageDeliveryTripFailure(
                                 ErrorCode.BAD_REQUEST,
                                 "[${response.code}] некорректный запрос"
                             )
                         }
 
                         401 -> {
-                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                            httpResultAndStatusListener?.selectPackageDeliveryTripFailure(
                                 ErrorCode.TOKEN_EXPIRED,
                                 "[${response.code}] Токен авторизации истёк или некорректен"
                             )
                         }
 
                         else -> {
-                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                            httpResultAndStatusListener?.selectPackageDeliveryTripFailure(
                                 ErrorCode.UNDEFINED_ERROR,
                                 "${response.code}"
                             )
@@ -1373,7 +1426,6 @@ class HttpApi(
             }
         })
     }
-
 }
 
 
