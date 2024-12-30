@@ -308,13 +308,13 @@ class MainViewModel(
 
 
     fun loadTrips(
-        departCountry:String,
+        departCountry: String,
         departCity: String,
-        destinationCountry:String,
+        destinationCountry: String,
         destinationCity: String,
         departDate: Date,
         freeWeightMin: Float
-    ) {// todo
+    ) {
 
 
         val token = token.value
@@ -331,24 +331,6 @@ class MainViewModel(
                 )
             }
         }
-        //        // получаем таблицу
-//        MongoCollection<Document> tripsCollection = mongoDatabase.getCollection(DBTrip.TABLE_NAME);
-//
-//        // получаем последние 10
-//        tripsCollection.find().limit(10).iterator().getAsync(result -> {
-//            if (result.isSuccess()) {
-//                // сохраняем все в лист
-//                MongoCursor<Document> cursor = result.get();
-//
-//                // пробегаемся по всем
-//                List<DBTrip> loadedNotifications = new LinkedList<>();
-//                while (cursor.hasNext())
-//                    loadedNotifications.add(new DBTrip(cursor.next()));
-//
-//                // передаем получившийся лист в глобальный отслеживаемый
-//                currentLoadedTrips.setValue(loadedNotifications);
-//            }
-//        });
     }
 
 
@@ -369,6 +351,57 @@ class MainViewModel(
 
     override fun httpLoadTrajectoriesSuccess(trips: List<EntityTrip>) {
         currentLoadedTrips.postValue(trips)
+    }
+
+
+    // создание маршрута
+    fun createTrip(
+        depAddresses: EntityAddress,
+        depDate: Date,
+        arrivalAddresses: EntityAddress,
+        arrivalDate: Date,
+        freeWeight: Float
+    ) {
+
+        val token = token.value
+        if (token != null) {
+            viewModelScope.launch {
+
+
+                httpClient.createTrip(
+                    token,
+                    depAddresses,
+                    depDate,
+                    arrivalAddresses,
+                    arrivalDate,
+                    freeWeight
+                )
+            }
+        }
+    }
+
+    // ответ API
+    override fun createTripFailure(errorCode: HttpApi.Companion.ErrorCode, status: String) {
+        when (errorCode) {
+            HttpApi.Companion.ErrorCode.TOKEN_EXPIRED -> {
+                sendToast("Сессия истекла: $status")
+                // Выходим из текущего пользователя
+                logout()
+            }
+
+            else -> sendToast("Ошибка: $status")
+        }
+    }
+
+    // ответ API
+    override fun createTripSuccess() {
+        loadTrips(
+            "",
+            "",
+            "",
+            "",
+            Date(),
+            0F)
     }
 
 
@@ -410,7 +443,6 @@ class MainViewModel(
     // ответ Http загрузчика
     override fun httpLoadUserExpeditionsSuccess(expeditions: List<EntityExpedition>) {
         currentUserExpeditions.postValue(expeditions)
-
     }
 
     // создание нового отправления
@@ -479,7 +511,7 @@ class MainViewModel(
         addressSender: EntityAddress,
         status: ExpeditionStatus,
         expeditionPackage: EntityPackage
-        ) {
+    ) {
         val editedExpeditionData = EntityExpedition(
             selectedExpedition.value!!.id,
             addressReceiver,
@@ -573,12 +605,16 @@ class MainViewModel(
 
     }
 
-    override fun selectPackageDeliveryTripFailure() {
+    override fun selectPackageDeliveryTripFailure(
+        errorCode: HttpApi.Companion.ErrorCode,
+        status: String
+    ) {
         TODO("Not yet implemented")
     }
 
     override fun selectPackageDeliveryTripSuccess() {
         sendToast("API говорит ДА...")
     }
+
 }
 

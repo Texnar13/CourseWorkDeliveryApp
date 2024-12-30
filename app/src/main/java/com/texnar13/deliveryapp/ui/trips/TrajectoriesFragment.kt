@@ -14,8 +14,11 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.google.android.material.textfield.TextInputLayout
 import com.texnar13.deliveryapp.R
+import com.texnar13.deliveryapp.model.entities.EntityExpedition
 import com.texnar13.deliveryapp.model.entities.EntityTrip
+import com.texnar13.deliveryapp.ui.expeditions.dialog.ExpeditionEditDialogFragment
 import com.texnar13.deliveryapp.ui.trips.dialogs.SelectPackageDialog
+import com.texnar13.deliveryapp.ui.trips.dialogs.TripEditDialog
 import com.texnar13.deliveryapp.view_model.MainViewModel
 import java.lang.String
 import java.text.SimpleDateFormat
@@ -61,6 +64,15 @@ class TrajectoriesFragment  // Required empty public constructor
         // контейнер trip
         val boxesContainer =
             rootView.findViewById<LinearLayout>(R.id.fragment_trajectories_search_result_container)
+
+
+
+        // кнопка добавить маршрут
+        rootView.findViewById<View>(R.id.add_button).setOnClickListener {
+
+            // вызываем диалог с пустыми начальными данными
+            editTrip(null)
+        }
 
         // -------------------------------- подписываемся на изменения во viewModel --------------------------------
         val mainViewModel = MainViewModel.getViewModel(requireActivity())
@@ -173,6 +185,19 @@ class TrajectoriesFragment  // Required empty public constructor
         }
 
         return rootView
+    }
+
+
+    // показать диалог редактирования или создания
+    private fun editTrip(trip: EntityTrip?) {
+
+        // передаём данные в диалог через view Model
+        //MainViewModel.getViewModel(requireActivity()).selectTripForEdit(trip)
+
+        // вызов диалога
+        TripEditDialog()
+            .show(parentFragmentManager, "TripEditDialog")
+
     }
 
 

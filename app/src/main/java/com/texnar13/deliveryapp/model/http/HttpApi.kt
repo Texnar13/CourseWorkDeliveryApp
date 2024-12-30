@@ -1,6 +1,8 @@
 package com.texnar13.deliveryapp.model.http
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.texnar13.deliveryapp.model.entities.EntityAddress
 import com.texnar13.deliveryapp.model.entities.EntityExpedition
 import com.texnar13.deliveryapp.model.entities.EntityPackage
@@ -95,8 +97,13 @@ class HttpApi(
         fun loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityTrip)
 
         // в "Сделать заявку" была выбрана посылка
-        fun selectPackageDeliveryTripFailure()
+        fun selectPackageDeliveryTripFailure(errorCode: ErrorCode, status: String)
         fun selectPackageDeliveryTripSuccess()
+
+        // создать поездку/маршрут
+        fun createTripFailure(errorCode: ErrorCode, status: String)
+        fun createTripSuccess()
+
 
         // ..
 
@@ -868,7 +875,7 @@ class HttpApi(
     }
 
 
-    val formatterDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US)
+    val formatterDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
 
     /** Поиск маршрутов по параметрам и загрузка списка (METHOD POST)
      * /filtered_trips
@@ -944,20 +951,319 @@ class HttpApi(
         // Выставляем статус
         updateStatus(HttpClientState.IN_PROCESS)
 
-        Log.e(
-            TAG, """ 
-            1666-12-28T13:00:00+03:00
-            2024-12-30T00:28:55+0300
-            loadTrajectoriesByParams:
 
-            departCountry=$departCountry
-            departCity=$departCity
-            destinationCountry=$destinationCountry
-            destinationCity=$destinationCity
-            departDate=${formatterDate.format(departDate)}
-            freeWeightMin=$freeWeightMin
-        """.trimIndent()
+
+        // Создаём тело запроса с медиатипом JSON
+        val requestBody = RequestBody.create(
+            "application/json; charset=utf-8".toMediaType(),
+            // Тело запроса в формате JSON
+            JSONObject().apply {
+                put("dep_country", departCountry)
+                put("dep_city", departCity)
+                put("dest_country", destinationCountry)
+                put("dest_city", destinationCity)
+                put("dep_date", formatterDate.format(departDate))
+                put("free_weight", freeWeightMin)
+            }.toString()
         )
+
+        // Создаём запрос
+        val request = Request.Builder()
+            .url("$serverAddress/filtered_trips")
+            .addHeader("Authorization", "Bearer $token") // Добавляем заголовок с JWT токеном
+            .post(requestBody)
+            .build()
+
+        // Отправляем запрос асинхронно
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Обработка ошибки подключения
+                httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                    ErrorCode.UNDEFINED_ERROR,
+                    "${e.message}"
+                )
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+
+            // Обработка ответа сервера
+            override fun onResponse(call: Call, response: Response) {
+
+                // Обрабатываем успешный ответ
+                if (response.isSuccessful) {
+
+                    // получаем json обьект и преобразуем строку в массив объектов
+                    val jsonArray = JSONArray(response.body!!.string())
+
+                    // результирующий лист
+                    val trajectories = List(jsonArray.length()) { pos ->
+                        // json обьект
+                        val jsonObject = jsonArray.getJSONObject(pos)
+
+
+                        // Создаём объект маршрута и как результат добавляем в список
+                        EntityTrip(
+                            id = jsonObject.getLong("ID"),
+                            userId = jsonObject.getLong("user_id"),
+                            isBusy = jsonObject.getBoolean("is_busy"),
+                            sendAddress = EntityAddress(
+                                jsonObject.getString("dep_country"),
+                                jsonObject.getString("dep_city"),
+                                jsonObject.getString("dep_district"),
+                                jsonObject.getString("dep_street"),
+                            ),
+                            receivingAddress = EntityAddress(
+                                jsonObject.getString("dest_country"),
+                                jsonObject.getString("dest_city"),
+                                jsonObject.getString("dest_district"),
+                                jsonObject.getString("dest_street"),
+                            ),
+                            depDate = formatterDate.parse(jsonObject.getString("dep_date"))!!,
+                            destDate = formatterDate.parse(jsonObject.getString("dest_date"))!!,
+                            freeWidth = jsonObject.getDouble("free_width").toFloat(),
+                            freeHeight = jsonObject.getDouble("free_height").toFloat(),
+                            freeLength = jsonObject.getDouble("free_length").toFloat(),
+                            availableWeight = jsonObject.getDouble("free_weight").toFloat(),
+                        )
+                    }
+
+
+
+
+                    httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories)
+                } else {
+                    when (response.code) {
+                        400 -> {
+                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                                ErrorCode.BAD_REQUEST,
+                                "[${response.code}] некорректный запрос"
+                            )
+                        }
+
+                        401 -> {
+                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                                ErrorCode.TOKEN_EXPIRED,
+                                "[${response.code}] Токен авторизации истёк или некорректен"
+                            )
+                        }
+
+                        else -> {
+                            httpResultAndStatusListener?.httpLoadTrajectoriesFailure(
+                                ErrorCode.UNDEFINED_ERROR,
+                                "${response.code}"
+                            )
+                        }
+                    }
+                }
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+        })
+    }
+
+
+
+    /** Создать маршрут (METHOD POST)
+    * /create_trip
+    *
+    * Передаётся jwt-токен
+    *
+    * body:
+    * {
+    * //   "user_id": 12345, <- оно берётся из заголовка и устанавливается тому пользователю который отправил запрос
+    * "is_busy": false,
+    * "dep_dat": "2022-12-29T10:00:00Z",
+    * "dep_country": "Ukraine",
+    * "dep_city": "Moscow",
+    * "dep_district": "Central",
+    * "dep_street": "Tverskaya Street",
+    * "dest_date": "2023-12-30T18:00:00Z",
+    * "dest_country": "USA",
+    * "dest_city": "New York",
+    * "dest_district": "Montmartre",
+    * "dest_street": "Rue de Rivoli",
+    * "free_width": 1.2,
+    * "free_height": 1.5,
+    * "free_length": 2.5,
+    * "free_weight": 20.0
+    * }
+    *
+    * response:
+    * {
+    * "message": "Package created"
+    * }
+    *
+    *
+    * */
+    suspend fun createTrip(
+        token: String,
+        depAddresses: EntityAddress,
+        depDate: Date,
+        arrivalAddresses: EntityAddress,
+        arrivalDate: Date,
+        freeWeight: Float
+    ) {
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+
+
+        Log.e(TAG, "createTrip: token=$token is_busy = ${false}"+"\n"+
+        "dep_dat = ${formatterDate.format(depDate)}"+"\n"+
+        "dep_country = ${depAddresses.getCountry()}"+"\n"+
+        "dep_city = ${depAddresses.getCity()}"+"\n"+
+        "dep_district = ${depAddresses.getDistrict()}"+"\n"+
+        "dep_street = ${depAddresses.getStreet()}"+"\n"+
+        "dest_date = ${formatterDate.format(arrivalDate)}"+"\n"+
+        "dest_country = ${arrivalAddresses.getCountry()}"+"\n"+
+        "dest_city = ${arrivalAddresses.getCity()}"+"\n"+
+        "dest_district = ${arrivalAddresses.getDistrict()}"+"\n"+
+        "dest_street = ${arrivalAddresses.getStreet()}"+"\n"+
+        "free_width = ${0F}"+"\n"+
+        "free_height = ${0F}"+"\n"+
+        "free_length = ${0F}"+"\n"+
+        "free_weight = ${freeWeight}")
+
+
+        // Создаём тело запроса с медиатипом JSON
+        val requestBody = RequestBody.create(
+            "application/json; charset=utf-8".toMediaType(),
+            // Тело запроса в формате JSON
+            JSONObject().apply {
+                put("is_busy", false)
+                put("dep_date", formatterDate.format(depDate))
+                put("dep_country", depAddresses.getCountry())
+                put("dep_city", depAddresses.getCity())
+                put("dep_district", depAddresses.getDistrict())
+                put("dep_street", depAddresses.getStreet())
+                put("dest_date", formatterDate.format(arrivalDate))
+                put("dest_country", arrivalAddresses.getCountry())
+                put("dest_city", arrivalAddresses.getCity())
+                put("dest_district", arrivalAddresses.getDistrict())
+                put("dest_street", arrivalAddresses.getStreet())
+                put("free_width", 0F)
+                put("free_height", 0F)
+                put("free_length", 0F)
+                put("free_weight", freeWeight)
+            }.toString()
+        )
+
+        // Создаём запрос
+        val request = Request.Builder()
+            .url("$serverAddress/create_trip")
+            .addHeader("Authorization", "Bearer $token") // Добавляем заголовок с JWT токеном
+            .post(requestBody)
+            .build()
+
+        // Отправляем запрос асинхронно
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // Обработка ошибки подключения
+                httpResultAndStatusListener?.createTripFailure(
+                    ErrorCode.UNDEFINED_ERROR,
+                    "${e.message}"
+                )
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                // Обработка ответа сервера
+                if (response.isSuccessful) {
+                    httpResultAndStatusListener?.createTripSuccess()
+                } else {
+                    when (response.code) {
+                        400 -> {
+                            httpResultAndStatusListener?.createTripFailure(
+                                ErrorCode.BAD_REQUEST,
+                                "[${response.code}] некорректный запрос"
+                            )
+                        }
+
+                        401 -> {
+                            httpResultAndStatusListener?.createTripFailure(
+                                ErrorCode.TOKEN_EXPIRED,
+                                "[${response.code}] Токен авторизации истёк или некорректен"
+                            )
+                        }
+
+                        else -> {
+                            httpResultAndStatusListener?.createTripFailure(
+                                ErrorCode.UNDEFINED_ERROR,
+                                "${response.code}"
+                            )
+                        }
+                    }
+                }
+                // Выставляем статус
+                updateStatus(HttpClientState.NO_WORK)
+            }
+        })
+    }
+
+
+
+    /** посмотреть данные отправления и маршрута
+     *
+     */
+    suspend fun loadTrajectoryDataForExpedition(token: String, expedition: EntityExpedition) {
+
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        delay(1500)
+        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(
+            EntityTrip(
+                0,
+                1,
+                false,
+                EntityAddress("s","sd","sdf","sdfg"),
+                EntityAddress("s","sd","sdf","sdfg"),
+                Date(),
+                Date(),
+                0F,
+                0F,
+                0F,
+                0F
+            )
+        )
+
+        // посмотреть данные отправления и маршрута
+//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(errorCode: ErrorCode, status: String)
+//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityTrip)
+
+        // Выставляем статус
+        updateStatus(HttpClientState.NO_WORK)
+    }
+
+    /** Привязать свою посылку к маршруту (METHOD POST)
+     *
+     * /link_with_trip
+     *
+     * Передаётся jwt-токен
+     *
+     * body:
+     * {
+     * "package_id": 2,
+     * "trip_id": 10
+     * }
+     *
+     * response:
+     * {
+     * "message": "Package linked with trip"
+     * }
+     *
+     */
+    suspend fun selectPackageDeliveryTrip(
+        token: String,
+        expedition: EntityExpedition,
+        value: EntityTrip
+    ) {
+        // Выставляем статус
+        updateStatus(HttpClientState.IN_PROCESS)
+
+        //httpResultAndStatusListener?.selectPackageDeliveryTripFailure()
+        //httpResultAndStatusListener?.selectPackageDeliveryTripSuccess()
 
 
         // Создаём тело запроса с медиатипом JSON
@@ -1066,88 +1372,6 @@ class HttpApi(
                 updateStatus(HttpClientState.NO_WORK)
             }
         })
-
-
-
-
-
-
-        //delay(1500)
-
-//        httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(
-//            listOf(
-//                EntityTrip(
-//                    0,
-//                    "100$",
-//                    "Russia",
-//                    "Moscow",
-//                    "Russia",
-//                    "Vladivostok",
-//                    Date(),
-//                    3F
-//                )
-//            )
-//        )
-
-//        httpResultAndStatusListener?.httpLoadTrajectoriesFailure(errorCode: ErrorCode, status: String)
-//        httpResultAndStatusListener?.httpLoadTrajectoriesSuccess(trajectories: List<EntityTrip>)
-
-        // Выставляем статус
-        updateStatus(HttpClientState.NO_WORK)
-    }
-
-    /** посмотреть данные отправления и маршрута
-     *
-     */
-    suspend fun loadTrajectoryDataForExpedition(token: String, expedition: EntityExpedition) {
-
-        // Выставляем статус
-        updateStatus(HttpClientState.IN_PROCESS)
-
-        delay(1500)
-        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(
-            EntityTrip(
-                0,
-                1,
-                false,
-                EntityAddress("s","sd","sdf","sdfg"),
-                EntityAddress("s","sd","sdf","sdfg"),
-                Date(),
-                Date(),
-                0F,
-                0F,
-                0F,
-                0F
-            )
-        )
-
-        // посмотреть данные отправления и маршрута
-//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionFailure(errorCode: ErrorCode, status: String)
-//        httpResultAndStatusListener?.loadTrajectoryDataForExpeditionSuccess(trajectoryAndExpedition: EntityExpedition)
-
-        // Выставляем статус
-        updateStatus(HttpClientState.NO_WORK)
-    }
-
-    /** Привязать свою посылку к маршруту
-     *
-     */
-    suspend fun selectPackageDeliveryTrip(
-        token: String,
-        expedition: EntityExpedition,
-        value: EntityTrip
-    ) {
-
-        // Выставляем статус
-        updateStatus(HttpClientState.IN_PROCESS)
-
-        delay(1500)
-
-        //httpResultAndStatusListener?.selectPackageDeliveryTripFailure()
-        httpResultAndStatusListener?.selectPackageDeliveryTripSuccess()
-
-        // Выставляем статус
-        updateStatus(HttpClientState.NO_WORK)
     }
 
 }

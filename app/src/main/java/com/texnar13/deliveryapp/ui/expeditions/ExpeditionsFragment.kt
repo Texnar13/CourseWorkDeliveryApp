@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.navigation.Navigation
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.texnar13.deliveryapp.R
 import com.texnar13.deliveryapp.model.entities.EntityExpedition
@@ -34,7 +33,7 @@ class ExpeditionsFragment : Fragment() {
 
 
         // кнопка добавить отправление
-        val addButton = rootView.findViewById<View>(R.id.fragment_expeditions_add_button)
+        val addButton = rootView.findViewById<View>(R.id.add_button)
         addButton.setOnClickListener {
 
             // вызываем диалог с пустыми начальными данными
